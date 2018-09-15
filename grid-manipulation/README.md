@@ -1,1 +1,3 @@
-Functions that are used to alter/reshape/extract data from the matrix format
+# Grid Manipulation
+
+Functions that are used to alter/reshape/extract data from the matrix format.
