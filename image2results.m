@@ -17,9 +17,9 @@
 
 %%  Load Paths to Files and Data
 
-    col_analyzer_path = '/users/saurinparikh/documents/matlab/matlab-colony-analyzer-toolkit-master';
-    bean_toolkit_path = '/users/saurinparikh/documents/matlab/bean-matlab-toolkit-master';
-    sau_toolkit_path = '/users/saurinparikh/documents/matlab/sau-matlab-toolkit';
+    col_analyzer_path = '/Users/saurinparikh/Documents/GitHub/Matlab-Colony-Analyzer-Toolkit';
+    bean_toolkit_path = '/Users/saurinparikh/Documents/GitHub/bean-matlab-toolkit';
+    sau_toolkit_path = '/Users/saurinparikh/Documents/GitHub/sau-matlab-toolkit';
     addpath(genpath(col_analyzer_path));
     addpath(genpath(bean_toolkit_path));
     addpath(genpath(sau_toolkit_path));
@@ -319,14 +319,6 @@
             end
         end
     end
-    
-%     for ii = 3:length(avg_data)
-%         for iii = 1:length(avg_data{ii})
-%             if ~isempty(avg_data{ii}{iii})
-%                 datainsert(conn,tablename_raw,colnames_raw,avg_data{ii}{iii});
-%             end
-%         end
-%     end
 
 %%  RAW to SPATIAL
 
@@ -574,15 +566,15 @@
     
 %%  EMPIRICAL FDR
 
-    exec(conn, sprintf('drop table %s',tablename_efdr));
-    exec(conn, sprintf(['create table %s (hours int not null, ' ...
-        'p double null, eFDR double null)'],tablename_efdr));
-    
-    colnames_efdr = {'hours','p','eFDR'};
-    
-    efdrdata = efdr(tablename_fit,tablename_pval,hours,cont.name,16);
-    
-    datainsert(conn,tablename_efdr,colnames_efdr,efdrdata);
+%     exec(conn, sprintf('drop table %s',tablename_efdr));
+%     exec(conn, sprintf(['create table %s (hours int not null, ' ...
+%         'p double null, eFDR double null)'],tablename_efdr));
+%     
+%     colnames_efdr = {'hours','p','eFDR'};
+%     
+%     efdrdata = efdr(tablename_fit,tablename_pval,hours,cont.name,16);
+%     
+%     datainsert(conn,tablename_efdr,colnames_efdr,efdrdata);
  
 %%  RESULTS USING PERC METHOD
 
@@ -703,7 +695,6 @@
     end
 
 %%  RESULTS using p values and eFDR
-%   (p val < 0.05 and stat)
 
     exec(conn, sprintf('drop table %s',tablename_res_efdr));
     exec(conn, sprintf(['create table %s (orf_name varchar(255) not null, ',...

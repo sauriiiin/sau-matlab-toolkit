@@ -10,9 +10,6 @@
 
         connectSQL;
 
-    %     hours = fetch(conn, sprintf(['select distinct hours from %s ',...
-    %         'order by hours asc'], tablename_jpeg));
-
         n_plates = fetch(conn, sprintf(['select distinct %s from %s a ',...
             'order by %s asc'],...
             p2c_info(2,:),...
@@ -61,19 +58,25 @@
                         p2c_info(4,:)));
 
                     if ~isempty(avg_data{ii}{iii})
+                        %control colony positions as a grid
                         pos_cont = col2grid(ismember(pos.all.pos, pos.cont.pos));
-
+                        %control colony avg pixel count per position as
+                        %grid
                         avg_cont = col2grid(avg_data{ii}{iii}.average).*pos_cont;
+                        %avg pixel count for entire plate
                         avg_all = col2grid(avg_data{ii}{iii}.average);
-
-                        tmp = avg_cont>prctile(avg_cont(avg_cont>0),1); % removing all (small) outliers
-                        avg_cont = avg_cont.*tmp;
-
-                        cont_bg = SM(SM(avg_cont)); %control background per position
-
-                        plate_cn = avg_all./cont_bg; plate_cn_cont = plate_cn.*pos_cont;
-
+                        %removing all (small) outliers
+                        avg_cont = avg_cont.*(avg_cont>prctile(avg_cont(avg_cont>0),1));
+                        %control background per position using SM algorithm
+                        cont_bg = SM(SM(avg_cont)); 
+                        %normalizing all values using the background
+                        plate_cn = avg_all./cont_bg;
+                        %background corrected control colony pixel counts
+                        plate_cn_cont = plate_cn.*pos_cont;
+                        %control colony mode
                         cont_mode = parzen_mode(plate_cn_cont(plate_cn_cont(:)>0));
+                        %normalizing all values with the control colony
+                        %mode
                         plate_cn_mn = plate_cn./cont_mode;
 
                         avg_data{ii}{iii}.csS = grid2row(plate_cn_mn)';
@@ -121,19 +124,25 @@
                         p2c_info(4,:)));
 
                     if ~isempty(avg_data{ii}{iii})
+                        %control colony positions as a grid
                         pos_cont = col2grid(ismember(pos.all.pos, pos.cont.pos));
-
+                        %control colony avg pixel count per position as
+                        %grid
                         avg_cont = col2grid(avg_data{ii}{iii}.average).*pos_cont;
+                        %avg pixel count for entire plate
                         avg_all = col2grid(avg_data{ii}{iii}.average);
-
-                        tmp = avg_cont>prctile(avg_cont(avg_cont>0),1); % removing all (small) outliers
-                        avg_cont = avg_cont.*tmp;
-
-                        cont_bg = SM(SM(avg_cont)); %control background per position
-
-                        plate_cn = avg_all./cont_bg; plate_cn_cont = plate_cn.*pos_cont;
-
+                        %removing all (small) outliers
+                        avg_cont = avg_cont.*(avg_cont>prctile(avg_cont(avg_cont>0),1));
+                        %control background per position using SM algorithm
+                        cont_bg = SM(SM(avg_cont)); 
+                        %normalizing all values using the background
+                        plate_cn = avg_all./cont_bg;
+                        %background corrected control colony pixel counts
+                        plate_cn_cont = plate_cn.*pos_cont;
+                        %control colony mode
                         cont_mode = parzen_mode(plate_cn_cont(plate_cn_cont(:)>0));
+                        %normalizing all values with the control colony
+                        %mode
                         plate_cn_mn = plate_cn./cont_mode;
 
                         avg_data{ii}{iii}.csS = grid2row(plate_cn_mn)';
