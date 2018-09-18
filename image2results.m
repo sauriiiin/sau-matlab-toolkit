@@ -115,6 +115,7 @@
     tablename_qval      = sprintf('%s_%d_QVALUE',expt_name,density);
     tablename_perc      = sprintf('%s_%d_PERC',expt_name,density);
     tablename_efdr      = sprintf('%s_%d_eFDR',expt_name,density);
+    tablename_efdr2     = sprintf('%s_%d_eFDR2',expt_name,density);
     tablename_res       = sprintf('%s_%d_RES',expt_name,density);
     tablename_res_es    = sprintf('%s_%d_RES_ES',expt_name,density);
     tablename_res_efdr  = sprintf('%s_%d_RES_eFDR',expt_name,density);
@@ -592,6 +593,22 @@
 %     efdrdata = efdr(tablename_fit,tablename_pval,hours,cont.name,16);
 %     
 %     datainsert(conn,tablename_efdr,colnames_efdr,efdrdata);
+
+%%  EMPIRICAL P-VALUES to EMPIRICAL FDR 
+
+    exec(conn, sprintf('drop table %s',tablename_efdr2));
+    exec(conn, sprintf(['create table %s (orf_name varchar(255) not null, ',...
+        'hours int not null, p double null, ',...
+        'eFDR double null)'],tablename_efdr2));
+    colnames_efdr2 = {'orf_name','hours','p','eFDR'};
+    
+    efdrdata2 = efdr2(tablename_pval2,hours,cont.name);
+
+    tic
+    for ii = 1:length(hours)
+        datainsert(conn,tablename_efdr2,colnames_efdr2,efdrdata2{ii});
+    end
+    toc
  
 %%  RESULTS USING PERC METHOD
 

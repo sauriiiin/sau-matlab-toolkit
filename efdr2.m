@@ -19,9 +19,10 @@
                 'order by orf_name asc'],tablename_pval,hours(iii),contname));
             for ii = 1:length(pdat{iii}.orf_name)
                 dat = [dat;...
-                    (pdat{iii}.p(ii)*length(pdat{iii}.orf_name))/sum(pdat{iii}.p<pdat{iii}.p(ii))];
+                    (pdat{iii}.p(ii)*length(pdat{iii}.orf_name))/sum(pdat{iii}.p<=pdat{iii}.p(ii))];
             end
-            pdat{iii}.efdr = dat;
+            pdat{iii}.eFDR = dat;
+            dat = [];
         end   
         conn(close);    
     end
