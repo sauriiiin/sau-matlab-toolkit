@@ -111,6 +111,7 @@
     tablename_fits      = sprintf('%s_%d_FITNESS_STATS',expt_name,density);
     tablename_es        = sprintf('%s_%d_FITNESS_ES',expt_name,density);
     tablename_pval      = sprintf('%s_%d_PVALUE',expt_name,density);
+    tablename_pval2     = sprintf('%s_%d_PVALUE2',expt_name,density);
     tablename_qval      = sprintf('%s_%d_QVALUE',expt_name,density);
     tablename_perc      = sprintf('%s_%d_PERC',expt_name,density);
     tablename_efdr      = sprintf('%s_%d_eFDR',expt_name,density);
@@ -488,19 +489,19 @@
     
 %%  FITNESS to Emperical P-VALUES
 % 
-%     exec(conn, sprintf('drop table %s',tablename_pval));
-%     exec(conn, sprintf(['create table %s (orf_name varchar(255) null,'...
-%         'hours int not null, p double null)'],tablename_pval));
-%     
-%     colnames_pval = {'orf_name','hours','p'};
-%     
-%     pdata = emp_p(tablename_fit,tablename_fits,hours,cont.name,16);
-%     
-%     tic
-%     for ii = 1:length(hours)
-%         datainsert(conn,tablename_pval,colnames_pval,pdata{ii});
-%     end
-%     toc
+    exec(conn, sprintf('drop table %s',tablename_pval2));
+    exec(conn, sprintf(['create table %s (orf_name varchar(255) null,'...
+        'hours int not null, p double null)'],tablename_pval2));
+    
+    colnames_pval2 = {'orf_name','hours','p'};
+    
+    pdata = emp_p(tablename_fit,tablename_fits,hours,cont.name,16);
+    
+    tic
+    for ii = 1:length(hours)
+        datainsert(conn,tablename_pval2,colnames_pval2,pdata{ii});
+    end
+    toc
     
 %%  P-VALUES to Q-VALUES
 

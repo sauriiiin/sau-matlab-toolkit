@@ -23,7 +23,8 @@
             'order by orf_name asc'],tablename_fits,hours(iii),contname));
         
         m = [];
-        for ii = 1:20000
+        tt = 100000;
+        for ii = 1:tt
             [temp, ~] = datasample(contfit.fitness, n);
             m = [m; median(temp)];
         end
@@ -31,10 +32,14 @@
 
         pvals = [];
         for i = 1:length(orffit.orf_name)
-            if sum(m<orffit.cs_median(i)) < 10000
-                pvals = [pvals; sum(m<orffit.cs_median(i))/20000];
+            if sum(m<orffit.cs_median(i)) < tt/2
+                if m<orffit.cs_median(i) == 0
+                    pvals = [pvals; 1/tt];
+                else
+                    pvals = [pvals; sum(m<orffit.cs_median(i))/tt];
+                end
             else
-                pvals = [pvals; sum(m>orffit.cs_median(i))/20000];
+                pvals = [pvals; sum(m>orffit.cs_median(i))/tt];
             end
         end
         
