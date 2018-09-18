@@ -7,6 +7,8 @@
 
 %   Calculates emperical p-value from fitness data
 %   out = emp_p(tablename_fit,tablename_fits,hours,contname, n)
+%
+%   Need to add stats
 
 %%
     function out = emp_p(tablename_fit,tablename_fits,hours,contname, n)
