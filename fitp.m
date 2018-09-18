@@ -5,9 +5,9 @@
 %   Author: Saurin Parikh, November 2017
 %   dr.saurin.parikh@gmail.com
 
-%   Calculates p=value from fitness data
+%   Calculates p-values from fitness data
 %   pdata = fitp(cont, all)
-%   cont.yielf
+%   cont.yield
 %   all.orf_name, all.fitness
 %   pdata.p, pdata.stats, pdata.orf_name
 
