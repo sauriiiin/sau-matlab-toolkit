@@ -4,9 +4,7 @@
 
 %   Author: Saurin Parikh, August 2018
 %   dr.saurin.parikh@gmail.com
-%
-%   Overall eFDR rather than BeFDR and DeFDR that empfdr function generates
-    
+%   
 
 %%
     function out = efdr(tablename_fit,tablename_pval,hours,contname,t)
