@@ -9,19 +9,19 @@
 %               (total significants for that p-value)
 
 %%
-    function out = efdr2(tablename_fit,tablename_pval,hours,contname,t)
-    
+    function pdat = efdr2(tablename_pval,hours,contname)
         connectSQL;        
-        out = [];
         dat = [];
-        
         for iii = 1:length(hours)       
-            pdat = fetch(conn, sprintf(['select * from %s ',...
+            pdat{iii} = fetch(conn, sprintf(['select * from %s ',...
                 'where hours = %d and p != ''NULL'' ',...
-                'and orf_name != ''%d'' ',...
+                'and orf_name != ''%s'' ',...
                 'order by orf_name asc'],tablename_pval,hours(iii),contname));
-            
-            
+            for ii = 1:length(pdat{iii}.orf_name)
+                dat = [dat;...
+                    (pdat{iii}.p(ii)*length(pdat{iii}.orf_name))/sum(pdat{iii}.p<pdat{iii}.p(ii))];
+            end
+            pdat{iii}.efdr = dat;
         end   
         conn(close);    
     end
