@@ -492,9 +492,9 @@
 % 
     exec(conn, sprintf('drop table %s',tablename_pval2));
     exec(conn, sprintf(['create table %s (orf_name varchar(255) null,'...
-        'hours int not null, p double null)'],tablename_pval2));
+        'hours int not null, p double null, stat double null)'],tablename_pval2));
     
-    colnames_pval2 = {'orf_name','hours','p'};
+    colnames_pval2 = {'orf_name','hours','p','stat'};
     
     pdata = emp_p(tablename_fit,tablename_fits,hours,cont.name,16);
     
