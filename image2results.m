@@ -598,9 +598,9 @@
 
     exec(conn, sprintf('drop table %s',tablename_efdr2));
     exec(conn, sprintf(['create table %s (orf_name varchar(255) not null, ',...
-        'hours int not null, p double null, ',...
+        'hours int not null, p double null, stat double null, ',...
         'eFDR double null)'],tablename_efdr2));
-    colnames_efdr2 = {'orf_name','hours','p','eFDR'};
+    colnames_efdr2 = {'orf_name','hours','p','stat','eFDR'};
     
     efdrdata2 = efdr2(tablename_pval2,hours,cont.name);
 
