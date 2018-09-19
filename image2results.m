@@ -299,6 +299,7 @@
     
     hours = fetch(conn, sprintf(['select distinct hours from %s ',...
         'order by hours asc'], tablename_jpeg));
+    hours = hours.hours;
     
     exec(conn, sprintf('drop table %s',tablename_raw));  
     exec(conn, sprintf(['create table %s (pos int not null, hours int not null,'...
@@ -325,8 +326,6 @@
 %%  RAW to SPATIAL
 
     clear data
-    
-    hours = hours.hours;
     
     exec(conn, sprintf('drop table %s',tablename_spa));
     exec(conn, sprintf(['create table %s (pos int not null, hours int not null,'...
@@ -602,7 +601,7 @@
         'eFDR double null)'],tablename_efdr2));
     colnames_efdr2 = {'orf_name','hours','p','stat','eFDR'};
     
-    efdrdata2 = efdr2(tablename_pval2,hours,cont.name);
+    efdrdata2 = efdr2(tablename_pval,hours,cont.name);
 
     tic
     for ii = 1:length(hours)
