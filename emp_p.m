@@ -43,11 +43,11 @@
                         pvals = [pvals; 1/tt];
                         stat = [stat; (orffit.cs_mean(i) - contmean)/contstd];
                     else
-                        pvals = [pvals; sum(m<=orffit.cs_median(i))/tt];
+                        pvals = [pvals; (sum(m<=orffit.cs_median(i))+1)/tt];
                         stat = [stat; (orffit.cs_mean(i) - contmean)/contstd];
                     end
                 else
-                    pvals = [pvals; sum(m>=orffit.cs_median(i))/tt];
+                    pvals = [pvals; (sum(m>=orffit.cs_median(i))+1)/tt];
                     stat = [stat; (orffit.cs_mean(i) - contmean)/contstd];
                 end
             end
