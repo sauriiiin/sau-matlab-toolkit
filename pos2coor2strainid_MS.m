@@ -6,7 +6,7 @@
     coor1536 = [];
     coor384 = [];
 
-    for i = linspace(1,1,1)
+    for i = linspace(1,3,3)
         coor6144 = [coor6144, [ones(1,6144)*i;indices(6144)]];
     end
 
@@ -14,7 +14,7 @@
         coor1536 = [coor1536, [ones(1,1536)*i;indices(1536)]];
     end
 
-    for i = [1:17,22]
+    for i = [3,5,22,19]
         coor384 = [coor384, [ones(1,384)*i;indices(384)]];
     end
 
@@ -23,7 +23,7 @@
     connectSQL;
 
     plates = fetch(conn, ['select distinct 384plate ',...
-        'from BARFLEX_SPACE_AGAR where 384plate = 22 ',...where 384plate in (3,5,22) ',...
+        'from BARFLEX_SPACE_AGAR where 384plate in (3,5,22) ',...
         'order by 384plate asc']);
 
     strains = [-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2];
@@ -46,38 +46,35 @@
         data = [data;[temp(:,1),temp(:,5)]];
     end
 
+    %strains
     colnames = {'pos','strain_id'};
-    datainsert(conn,'BF_pos2strainid',colnames,data);
-    
+    datainsert(conn,'PT2_pos2strainid',colnames,data);
+    %control plate
     c_data = [linspace(384*3+1,384*4,384)',ones(384,1)*-1];
-    datainsert(conn,'MS_pos2strainid',colnames,c_data);
+    datainsert(conn,'PT2_pos2strainid',colnames,c_data);
 
 %%  POSITIONS
 
-%   plate384
-%     pos384_3    = col2grid(linspace(1,384,384));
-%     pos384_5    = col2grid(linspace(384+1,384*2,384));
-%     pos384_22   = col2grid(linspace(384*2+1,384*3,384));
-%     pos384_c    = col2grid(linspace(384*3+1,384*4,384));
+%   positions/plate
+    pos384_03    = col2grid(linspace(1,384,384));
+    pos384_05    = col2grid(linspace(384+1,384*2,384));
+    pos384_22    = col2grid(linspace(384*2+1,384*3,384));
+    pos384_c1    = col2grid(linspace(384*3+1,384*4,384));
+%   positions+indices/plate
+    plate384    = [[grid2row(pos384_03), grid2row(pos384_05),...
+        grid2row(pos384_22), grid2row(pos384_c1)]; coor384]';
     
-    pos384      = 1:384*18;
-    
-%     plate384    = [[grid2row(pos384_3), grid2row(pos384_5),...
-%         grid2row(pos384_22), grid2row(pos384_c)]; coor384]';
-
-    plate384    = [pos384;coor384]';
-    
-    exec(conn, ['create table BF_pos2coor384 (pos int not null, 384plate int not null,'...
+    exec(conn, ['create table PT2_pos2coor384 (pos int not null, 384plate int not null,'...
         ' 384row int not null, 384col int not null)']);
     tablename = 'BF_pos2coor384';
     colnames = {'pos','384plate','384row','384col'};
     datainsert(conn,tablename,colnames,plate384);
 
 %   plate1536
-    pos1536_1 = plategen(pos384_c,pos384_3,pos384_5,pos384_22)+10000;
-    pos1536_2 = plategen(pos384_22,pos384_c,pos384_3,pos384_5)+20000;
-    pos1536_3 = plategen(pos384_5,pos384_22,pos384_c,pos384_3)+30000;
-    pos1536_4 = plategen(pos384_3,pos384_5,pos384_22,pos384_c)+40000;
+    pos1536_1 = plategen(pos384_c1,pos384_03,pos384_05,pos384_22)+10000;
+    pos1536_2 = plategen(pos384_22,pos384_c1,pos384_03,pos384_05)+20000;
+    pos1536_3 = plategen(pos384_05,pos384_22,pos384_c1,pos384_03)+30000;
+    pos1536_4 = plategen(pos384_03,pos384_05,pos384_22,pos384_c1)+40000;
     
     plate1536   = [[grid2row(pos1536_1), grid2row(pos1536_2),...
         grid2row(pos1536_3), grid2row(pos1536_4)]; coor1536]';    
