@@ -1,11 +1,19 @@
-%%  Sau MATLAB Colony Analyzer Toolkitv
+%%  Sau MATLAB Colony Analyzer Toolkit
 %
 %%  pos2coor2strainid.m
 
 %   Author: Saurin Parikh, September 2018
 %   dr.saurin.parikh@gmail.com
+%  
+%   Create position 2 co-ordinate, 2 strain id and
+%       2 orf_name tables for any experiment.
 
 %%  INITIALIZATION
+
+%     Set preferences with setdbprefs.
+    setdbprefs({'NullStringRead';'NullStringWrite';'NullNumberRead';'NullNumberWrite'},...
+                  {'null';'null';'NaN';'NaN'})
+    connectSQL;
     
     prompt={'Enter a name for your experiment:'};
     name='expt_name';
@@ -29,26 +37,24 @@
     coor1536 = [];
     coor384 = [];
 
-    for i = linspace(1,3,3)
+    for i = linspace(1,3,3)             %modify this
         coor6144 = [coor6144, [ones(1,6144)*i;indices(6144)]];
     end
 
-    for i = linspace(1,4,4)
+    for i = linspace(1,4,4)             %modify this
         coor1536 = [coor1536, [ones(1,1536)*i;indices(1536)]];
     end
 
-    for i = [3,5,22,19]
+    for i = [3,5,22,19]                 %modify this
         coor384 = [coor384, [ones(1,384)*i;indices(384)]];
     end
 
 %%  STRAINS
 
-    connectSQL;
-
     plates = fetch(conn, ['select distinct 384plate ',...
         'from BARFLEX_SPACE_AGAR where 384plate in (3,5,22) ',...
         'order by 384plate asc']);
-
+    %borders and nulls
     strains = [-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2];
 
     data = [];
@@ -121,7 +127,7 @@
         ' 6144row int not null, 6144col int not null)'],tablename_p2c6144));
     datainsert(conn,tablename_p2c6144,colnames_p2c6144,plate6144);
    
-%%  CALCULATING STRAINS FOR P2ID TABLES
+%%  CALCULATING STRAINS FOR POS2STRAIN_ID TABLES
 
 %   plate384 pos2strainid
     strain384_3    = fetch(conn, sprintf(['select strain_id from %s',...
@@ -173,5 +179,4 @@
     
 %%  END
     conn(close);
-
-
+%%

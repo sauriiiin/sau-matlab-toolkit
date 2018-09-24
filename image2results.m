@@ -1,4 +1,4 @@
-%%  Sau MATLAB Colony Analyzer Toolkitv
+%%  Sau MATLAB Colony Analyzer Toolkit
 %
 %%  image2results.m
 
