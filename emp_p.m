@@ -63,4 +63,6 @@
         conn(close);
     end
     
+    % apply Z score by using std for a population, where
+    % Z = (x - u)/(std/sqrt[n])
     
