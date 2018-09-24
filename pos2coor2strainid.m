@@ -5,6 +5,24 @@
 %   Author: Saurin Parikh, September 2018
 %   dr.saurin.parikh@gmail.com
 
+%%  INITIALIZATION
+    
+    prompt={'Enter a name for your experiment:'};
+    name='expt_name';
+    numlines=1;
+    defaultanswer={'test'};
+    expt_name = char(inputdlg(prompt,name,numlines,defaultanswer));
+    
+    tablename_p2id      = sprintf('%s_pos2strainid',expt_name);
+    colnames_p2id       = {'pos','strain_id'};
+    tablename_p2c384    = sprintf('%s_pos2coor384',expt_name);
+    colnames_p2c384     = {'pos','384plate','384row','384col'};
+    tablename_p2c1536   = sprintf('%s_pos2coor1536',expt_name);
+    colnames_p2c1536    = {'pos','1536plate','1536row','1536col'};    
+    tablename_p2c6144   = sprintf('%s_pos2coor6144',expt_name);
+    colnames_p2c6144    = {'pos','6144plate','6144row','6144col'};
+    tablename_p2o       = sprintf('%s_pos2orf_name',expt_name);
+    
 %%  INDICES
 
     coor6144 = [];
@@ -50,13 +68,15 @@
             
         data = [data;[temp(:,1),temp(:,5)]];
     end
+    
+    exec(conn, sprintf(['create table %s ',...
+        '(pos int not null, strain_id int not null)'], tablename_p2id));
 
     %strains
-    colnames = {'pos','strain_id'};
-    datainsert(conn,'PT2_pos2strainid',colnames,data);
+    datainsert(conn,tablename_p2id,colnames_p2id,data);
     %control plate
     c_data = [linspace(384*3+1,384*4,384)',ones(384,1)*-1];
-    datainsert(conn,'PT2_pos2strainid',colnames,c_data);
+    datainsert(conn,tablename_p2id,colnames_p2id,c_data);
 
 %%  POSITIONS
 
@@ -69,11 +89,10 @@
     plate384    = [[grid2row(pos384_03), grid2row(pos384_05),...
         grid2row(pos384_22), grid2row(pos384_c1)]; coor384]';
     
-    exec(conn, ['create table PT2_pos2coor384 (pos int not null, 384plate int not null,'...
-        ' 384row int not null, 384col int not null)']);
-    tablename = 'PT2_pos2coor384';
-    colnames = {'pos','384plate','384row','384col'};
-    datainsert(conn,tablename,colnames,plate384);
+    exec(conn, sprintf(['create table %s (pos int not null, ',...
+        '384plate int not null,'...
+        ' 384row int not null, 384col int not null)']),tablename_p2c384);
+    datainsert(conn,tablename_p2c384,colnames_p2c384,plate384);
 
 %   plate1536 positions/plate
     pos1536_1 = plategen(pos384_c1,pos384_03,pos384_05,pos384_22)+10000;
@@ -84,11 +103,10 @@
     plate1536   = [[grid2row(pos1536_1), grid2row(pos1536_2),...
         grid2row(pos1536_3), grid2row(pos1536_4)]; coor1536]';    
     
-    exec(conn, ['create table PT2_pos2coor1536 (pos int not null, 1536plate int not null,'...
-        ' 1536row int not null, 1536col int not null)']);
-    tablename = 'PT2_pos2coor1536';
-    colnames = {'pos','1536plate','1536row','1536col'};
-    datainsert(conn,tablename,colnames,plate1536);    
+    exec(conn, sprintf(['create table %s (pos int not null, ',...
+        '1536plate int not null, '...
+        '1536row int not null, 1536col int not null)'],tablename_p2c1536));
+    datainsert(conn,tablename_p2c1536,colnames_p2c1536,plate1536);    
     
 %   plate6144 positions/plate
     pos6144_1 = plategen(pos1536_1,pos1536_2,pos1536_3,pos1536_4)+100000;
@@ -98,32 +116,35 @@
     plate6144   = [[grid2row(pos6144_1),grid2row(pos6144_2),...
         grid2row(pos6144_3)]; coor6144]';
     
-    exec(conn, ['create table PT2_pos2coor6144 (pos int not null, 6144plate int not null,'...
-        ' 6144row int not null, 6144col int not null)']);
-    tablename = 'PT2_pos2coor6144';
-    colnames = {'pos','6144plate','6144row','6144col'};
-    datainsert(conn,tablename,colnames,plate6144);
+    exec(conn, sprintf(['create table %s (pos int not null,',...
+        ' 6144plate int not null,'...
+        ' 6144row int not null, 6144col int not null)'],tablename_p2c6144));
+    datainsert(conn,tablename_p2c6144,colnames_p2c6144,plate6144);
    
-%%  STRAINS ALL
+%%  CALCULATING STRAINS FOR P2ID TABLES
 
-%   plate384
-    strain384_3    = fetch(conn, ['select strain_id from PT2_pos2strainid ',...
-        'where pos between 1 and 384 order by pos asc ']);
+%   plate384 pos2strainid
+    strain384_3    = fetch(conn, sprintf(['select strain_id from %s',...
+        ' where pos between 1 and 384',...
+        ' order by pos asc'],tablename_p2id));
     strain384_3 = col2grid(strain384_3.strain_id);
 
-    strain384_5    = fetch(conn, ['select strain_id from PT2_pos2strainid ',...
-        'where pos between 385 and 384*2 order by pos asc ']);
+    strain384_5    = fetch(conn, sprintf(['select strain_id from %s',...
+        ' where pos between 385 and 384*2',...
+        ' order by pos asc'],tablename_p2id));
     strain384_5    = col2grid(strain384_5.strain_id);
     
-    strain384_22    = fetch(conn, ['select strain_id from PT2_pos2strainid ',...
-        'where pos between 384*2+1 and 384*3 order by pos asc ']);
+    strain384_22    = fetch(conn, sprintf(['select strain_id from %s',...
+        ' where pos between 384*2+1 and 384*3',...
+        ' order by pos asc'],tablename_p2id));
     strain384_22   = col2grid(strain384_22.strain_id);
 
-    strain384_c    = fetch(conn, ['select strain_id from PT2_pos2strainid ',...
-        'where pos between 384*3+1 and 384*4 order by pos asc ']);
+    strain384_c    = fetch(conn, sprintf(['select strain_id from %s',...
+        ' where pos between 384*3+1 and 384*4',...
+        ' order by pos asc'],tablename_p2id));
     strain384_c    = col2grid(strain384_c.strain_id);
 
-%   plate1536
+%   plate1536 pos2strainid
     strain1536_1 = plategen(strain384_c,strain384_3,strain384_5,strain384_22);
     strain1536_2 = plategen(strain384_22,strain384_c,strain384_3,strain384_5);
     strain1536_3 = plategen(strain384_5,strain384_22,strain384_c,strain384_3);
@@ -132,21 +153,25 @@
     strain1536   = [plate1536(:,1)';[grid2row(strain1536_1), grid2row(strain1536_2),...
         grid2row(strain1536_3), grid2row(strain1536_4)]]';    
     
-    tablename = 'PT2_pos2strainid';
-    colnames = {'pos','strain_id'};
-    datainsert(conn,tablename,colnames,strain1536);    
+    datainsert(conn,tablename_p2id,colnames_p2id,strain1536);    
     
-%   plate6144
+%   plate6144 pos2strainid
     strain6144 = plategen(strain1536_1,strain1536_2,strain1536_3,strain1536_4);
     
     strain6144   = [plate6144(:,1)'; [grid2row(strain6144),...
         grid2row(strain6144),grid2row(strain6144)]]';
     
-    tablename = 'PT2_pos2strainid';
-    colnames = {'pos','strain_id'};
-    datainsert(conn,tablename,colnames,strain6144);
+    datainsert(conn,tablename_p2id,colnames_p2id,strain6144);
     
-%%
+%%  POS2ORF_NAME TABLE USING SQL DATA
+
+    exec(conn, sprintf('drop table %s',tablename_p2o)); 
+    exec(conn, sprintf(['create table %s',...
+        ' (select a.pos, b.orf_name',...
+        ' from %s a, BARFLEX_SPACE_AGAR b',...
+        ' where a.strain_id = b.strain_id)'],tablename_p2o,tablename_p2id));
+    
+%%  END
     conn(close);
 
 
