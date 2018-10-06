@@ -233,7 +233,7 @@ end
 
 %%
 meanX = mean(x);
-medianX = median(x);
+medianX = nanmedian(x);
 defaultBarFactor=1.5/20;
 p=axis;
 if ~widthFlag % if the user didn't specify a specific width of the bar.

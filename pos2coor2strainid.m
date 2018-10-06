@@ -37,7 +37,7 @@
     coor1536 = [];
     coor384 = [];
 
-    for i = linspace(1,3,3)             %modify this
+    for i = linspace(1,2,2)             %modify this
         coor6144 = [coor6144, [ones(1,6144)*i;indices(6144)]];
     end
 
@@ -117,7 +117,7 @@
 %   plate6144 positions/plate
     pos6144_1 = plategen(pos1536_1,pos1536_2,pos1536_3,pos1536_4)+100000;
     pos6144_2 = plategen(pos1536_1,pos1536_2,pos1536_3,pos1536_4)+200000;
-    pos6144_3 = plategen(pos1536_1,pos1536_2,pos1536_3,pos1536_4)+300000;
+%     pos6144_3 = plategen(pos1536_1,pos1536_2,pos1536_3,pos1536_4)+300000;
 %   plate6144 positions+indices/plate    
     plate6144   = [[grid2row(pos6144_1),grid2row(pos6144_2),...
         grid2row(pos6144_3)]; coor6144]';
