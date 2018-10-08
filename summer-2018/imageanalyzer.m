@@ -7,9 +7,9 @@
 
 %%  Load Paths to Files and Data
 
-    col_analyzer_path = '/users/saurinparikh/documents/matlab/matlab-colony-analyzer-toolkit-master';
-    bean_toolkit_path = '/users/saurinparikh/documents/matlab/bean-matlab-toolkit-master';
-    sau_toolkit_path = '/users/saurinparikh/documents/matlab/sau-matlab-toolkit';
+    col_analyzer_path = '/Users/saurinparikh/Documents/GitHub/Matlab-Colony-Analyzer-Toolkit';
+    bean_toolkit_path = '/Users/saurinparikh/Documents/GitHub/bean-matlab-toolkit';
+    sau_toolkit_path = '/Users/saurinparikh/Documents/GitHub/sau-matlab-toolkit';
     addpath(genpath(col_analyzer_path));
     addpath(genpath(bean_toolkit_path));
     addpath(genpath(sau_toolkit_path));
@@ -78,6 +78,14 @@
                 all(ii) = exist(strcat(files{ii}, '.binary'));
             end
             pos = find(all==0);
+            
+        %%  Fix files that failed
+        
+%             for ii = 1 : length(pos)
+%                 tic;
+%                 analyze_image(files{pos(ii)}, params{:});
+%                 toc;
+%             end
 
         %%  Manually fix images #1
 
