@@ -96,6 +96,14 @@
             dimensions = [8 12];
     end
     
+    if density == 1536
+        poslim = [10000,100000];
+    elseif density == 6144
+        poslim = [100000,1000000];
+    else
+        poslim = [0,10000];
+    end
+    
     params = { ...
         'parallel', true, ...
         'verbose', true, ...
@@ -296,6 +304,7 @@
     toc
     
 %%  Upload RAW Data to SQL with Control Normalization
+%   Need to update for 384 density, it cannot be CNed
     
     hours = fetch(conn, sprintf(['select distinct hours from %s ',...
         'order by hours asc'], tablename_jpeg));
@@ -384,14 +393,14 @@
         data{ii}.csM(smudge) = 99999;
          
 %         NULLs from Source Plates
-%         source_zeros = [];
-%         for i = 1:replicate
-%             [la, lb] = ismember(source_nulls.pos, data{ii}.pos - (100000*i));%-(200000 + (10000*i)));
-%             source_zeros = lb(la);
-%             data{ii}.average(source_zeros) = 99999;
-%             data{ii}.csS(source_zeros) = 99999;
-%             data{ii}.csM(source_zeros) = 99999;
-%         end
+        source_zeros = [];
+        for i = 1:replicate
+            [la, lb] = ismember(source_nulls.pos, data{ii}.pos - (poslim(1)*i));
+            source_zeros = lb(la);
+            data{ii}.average(source_zeros) = 99999;
+            data{ii}.csS(source_zeros) = 99999;
+            data{ii}.csM(source_zeros) = 99999;
+        end
 
         tic
         datainsert(conn,tablename_spa,colnames_spa,data{ii}); 
@@ -399,14 +408,7 @@
     end
     
 %%  SPATIAL to FITNESS
-
-    if density == 1536
-        poslim = [10000,100000];
-    elseif density == 6144
-        poslim = [100000,1000000];
-    else
-        poslim = [0,10000];
-    end
+%   ------
 
     orf_data = fetch(conn, sprintf(['select * from %s where pos between ',...
         '%d and %d ',...
@@ -425,7 +427,7 @@
     for ii = 1:length(hours)
         spatial = fetch(conn, sprintf(['select pos, hours, average, csS from ',...
             '%s where hours = %d ',...
-            'order by pos'],tablename_spa,hours(ii)));
+            'order by pos asc'],tablename_spa,hours(ii)));
         fit_data{ii}.orf_name = orf_names;
         fit_data{ii}.pos = num2cell(spatial.pos);
         fit_data{ii}.hours = num2cell(spatial.hours);
@@ -728,7 +730,7 @@
 %         end
 %     end
 
-%%  RESULTS using p values and eFDR
+%%  RESULTS using q values and eFDR
 
     exec(conn, sprintf('drop table %s',tablename_res_efdr));
     exec(conn, sprintf(['create table %s (orf_name varchar(255) not null, ',...
