@@ -1,7 +1,7 @@
 # git commands
-1. ``git clone <link>``` #clone a repository
+```git clone <link>``` #clone a repository
 
-2. ```git checkout master``` #go to master branch to pull latest changes
+```git checkout master``` #go to master branch to pull latest changes
 
 ```git checkout -b name-of-branch'``` #make a new branch
 
