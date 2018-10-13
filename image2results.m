@@ -408,7 +408,6 @@
     end
     
 %%  SPATIAL to FITNESS
-%   ------
 
     orf_data = fetch(conn, sprintf(['select * from %s where pos between ',...
         '%d and %d ',...
