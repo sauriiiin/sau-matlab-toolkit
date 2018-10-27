@@ -57,39 +57,54 @@
     end
 
 %%  STRAINS
+%%  START WITH A CUSTOM 96
 
-    plates = fetch(conn, ['select distinct 384plate ',...
-        'from BARFLEX_SPACE_AGAR where 384plate in (3,5,22) ',...
-        'order by 384plate asc']);
-    %borders and nulls
-    strains = [-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2];
+%   PLATE 96
+%     plate96_01 = []; % and copy paste data from the excel sheet for the experimental layout
 
-    data = [];
-    for i=1:length(plates.x384plate)
-        bf = fetch(conn, sprintf(['select * from BARFLEX_SPACE_AGAR ',...
-            'where 384plate = %d ',...
-            'order by 384plate, 384col, 384row'],plates.x384plate(i)));
-        pos     = linspace(384*(i-1)'+1,384*i,384)';
-        plate   = ones(384,1)*plates.x384plate(i);
-        coor    = indices(384)';
-
-        temp    = [pos, plate, coor, strains];
-
-            for ii=1:length(bf.strain_id)
-                temp(bf.x384row(ii) + 16*(bf.x384col(ii)-1),5) = bf.strain_id(ii);
-            end
-            
-        data = [data;[temp(:,1),temp(:,5)]];
-    end
-    
     exec(conn, sprintf(['create table %s ',...
         '(pos int not null, strain_id int not null)'], tablename_p2id));
-
-    %strains
+    
+    data = [linspace(1,96*2,96*2);...
+        [grid2row(plate96_01),grid2row(plate96_02)]]';
     datainsert(conn,tablename_p2id,colnames_p2id,data);
-    %control plate
-    c_data = [linspace(384*3+1,384*4,384)',ones(384,1)*-1];
-    datainsert(conn,tablename_p2id,colnames_p2id,c_data);
+    
+%   PLATE 384
+    
+%%  START WITH EXISTING 384
+
+%     plates = fetch(conn, ['select distinct 384plate ',...
+%         'from BARFLEX_SPACE_AGAR where 384plate in (3,5,22) ',...
+%         'order by 384plate asc']);
+%     %borders and nulls
+%     strains = [-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2;-2];
+% 
+%     data = [];
+%     for i=1:length(plates.x384plate)
+%         bf = fetch(conn, sprintf(['select * from BARFLEX_SPACE_AGAR ',...
+%             'where 384plate = %d ',...
+%             'order by 384plate, 384col, 384row'],plates.x384plate(i)));
+%         pos     = linspace(384*(i-1)'+1,384*i,384)';
+%         plate   = ones(384,1)*plates.x384plate(i);
+%         coor    = indices(384)';
+% 
+%         temp    = [pos, plate, coor, strains];
+% 
+%             for ii=1:length(bf.strain_id)
+%                 temp(bf.x384row(ii) + 16*(bf.x384col(ii)-1),5) = bf.strain_id(ii);
+%             end
+%             
+%         data = [data;[temp(:,1),temp(:,5)]];
+%     end
+%     
+%     exec(conn, sprintf(['create table %s ',...
+%         '(pos int not null, strain_id int not null)'], tablename_p2id));
+% 
+%     %strains
+%     datainsert(conn,tablename_p2id,colnames_p2id,data);
+%     %control plate
+%     c_data = [linspace(384*3+1,384*4,384)',ones(384,1)*-1];
+%     datainsert(conn,tablename_p2id,colnames_p2id,c_data);
 
 %%  POSITIONS
 
