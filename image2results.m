@@ -106,12 +106,6 @@
         poslim = [100000,1000000];
     end
     
-    params = { ...
-        'parallel', true, ...
-        'verbose', true, ...
-        'grid', OffsetAutoGrid('dimensions', dimensions), ... default
-        'threshold', BackgroundOffset('offset', 1.25) }; % default = 1.25
-    
 %   MySQL Table Details  
     
     tablename_jpeg      = sprintf('%s_%d_JPEG',expt_name,density); 
@@ -160,10 +154,15 @@
         'Replicates',1,...
         {'4'})));
 
-    prompt={'Enter the name of your source table:'};
-    tablename_null = char(inputdlg(prompt,...
-        'Source Table',1,...
-        {'expt_384_SPATIAL'}));
+    if density >384
+        prompt={'Enter the name of your source table:'};
+        tablename_null = char(inputdlg(prompt,...
+            'Source Table',1,...
+            {'expt_384_SPATIAL'}));
+        source_nulls = fetch(conn, sprintf(['select a.pos from %s a ',...
+            'where a.csS is NULL ',...
+            'order by a.pos asc'],tablename_null));
+    end
     
     prompt={'Enter the control stain orf_name:'};
     cont.name = char(inputdlg(prompt,...
@@ -185,17 +184,13 @@
     proto = fetch(conn, ['select orf_name from PROTOGENES ',...
         'where longer + selected + translated < 3']);
     
-    source_nulls = fetch(conn, sprintf(['select a.pos from %s a ',...
-        'where a.csS is NULL ',...
-        'order by a.pos asc'],tablename_null));
-    
     close(conn);
     
 %%  ANALYZE DATA
     
     if density <= 384
-        image2spatial_LD(files, tablename_raw, colnames_raw,...
-            tablename_spa, colnames_spa)
+        image2spatial_LD(files, hours, dimensions,...
+            p2c, tablename_raw, tablename_spa)
     else
 %%  Load Analyzed Data
 
@@ -250,7 +245,6 @@
         toc
 
 %%  Upload RAW Data to SQL with Control Normalization
-%   Need to update for 384 density, it cannot be CNed
 
         hours = fetch(conn, sprintf(['select distinct hours from %s ',...
             'order by hours asc'], tablename_jpeg));
@@ -339,13 +333,15 @@
             data{ii}.csM(smudge) = 99999;
 
 %           NULLs from Source Plates
-            source_zeros = [];
-            for i = 1:replicate
-                [la, lb] = ismember(source_nulls.pos, data{ii}.pos - (poslim(1)*i));
-                source_zeros = lb(la);
-                data{ii}.average(source_zeros) = 99999;
-                data{ii}.csS(source_zeros) = 99999;
-                data{ii}.csM(source_zeros) = 99999;
+            if density >384
+                source_zeros = [];
+                for i = 1:replicate
+                    [la, lb] = ismember(source_nulls.pos, data{ii}.pos - (poslim(1)*i));
+                    source_zeros = lb(la);
+                    data{ii}.average(source_zeros) = 99999;
+                    data{ii}.csS(source_zeros) = 99999;
+                    data{ii}.csM(source_zeros) = 99999;
+                end
             end
 
             tic
