@@ -291,7 +291,7 @@
                 '%s where hours = %d'],tablename_raw,hours(ii)));
 
 %           Cleanning RAW DATA
-            [n_plate, density] = detect_den(dimensions, data{ii}.pos);
+            n_plate = length(data{ii}.pos)/density;
             rep_data = [data{ii}.replicate1, data{ii}.replicate2,...
                 data{ii}.replicate3];
             [cleaned_rep_data, data{ii}.average] = ...
