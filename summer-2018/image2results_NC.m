@@ -618,17 +618,5 @@
 %%  END OF ANALYSIS
 %%
     conn(close);
-
-%%  BEN, DEL and NEUT using ES
-
-% % stat > 0              es > 2        strong beneficial
-% %                 1.4 < es <= 2       beneficial
-% %                 0.8 < es <= 1.4     mild beneficial
-% %             
-% % stat < 0              es > 2        strong deleterious
-% %                 1.4 < es <= 2       deleterious
-% %                 0.8 < es <= 1.4     mild deleterious
-% %             
-% % everything else                     neutral
     
 %%  END
