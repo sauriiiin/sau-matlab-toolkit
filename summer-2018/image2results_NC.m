@@ -177,88 +177,95 @@
     close(conn);
     
 %%  ANALYZE DATA
-%%  Load Analyzed Data
+% %%  Load Analyzed Data
+% 
+%     cs = load_colony_sizes(files);
+%     size(cs)    % should be = (number of plates x 3 x number of time points) x density
+% 
+% %%  Mean the colony sizes from each of the images
+% 
+%     cs_mean = [];
+%     tmp = cs';
+% 
+%     for ii = 1:3:length(files)
+%         cs_mean = [cs_mean, mean(tmp(:,ii:ii+2),2)];
+%     end
+% 
+%     cs_mean = cs_mean';
+% 
+% %%  Putting Colony Size(pixels) and averages together
+% 
+%     master = [];
+%     tmp = [];
+%     i = 1;
+%     for ii = 1:3:size(cs,1)
+%         tmp = [cs(ii,:); cs(ii+1,:); cs(ii+2,:);...
+%             cs_mean(i,:)];
+%         master = [master, tmp];
+%         i = i + 1;
+%     end
+%     master = master';
+% 
+% %%  Upload JPEG Data to SQL
+% 
+%     connectSQL;
+% 
+%     exec(conn, sprintf('drop table %s',tablename_jpeg));  
+%     exec(conn, sprintf(['create table %s (pos int not null, hours int not null,'...
+%         'replicate1 int not null,'...
+%         'replicate2 int not null, replicate3 int not null, average double not null)'], tablename_jpeg));
+% 
+%     colnames_jpeg = {'pos','hours'...
+%         'replicate1','replicate2','replicate3',...
+%         'average'};
+% 
+%     tmpdata = [];
+%     for ii=1:length(hours)
+%         tmpdata = [tmpdata; [p2c.pos, ones(length(p2c.pos),1)*hours(ii)]];
+%     end
+% 
+%     data = [tmpdata,master];
+%     tic
+%     datainsert(conn,tablename_jpeg,colnames_jpeg,data);
+%     toc
+% 
+% %%  Upload RAW Data to SQL with Control Normalization
+% 
+%     hours = fetch(conn, sprintf(['select distinct hours from %s ',...
+%         'order by hours asc'], tablename_jpeg));
+%     hours = hours.hours;
+% 
+%     exec(conn, sprintf('drop table %s',tablename_raw));  
+%     exec(conn, sprintf(['create table %s (pos int not null, hours int not null,'...
+%         'replicate1 int not null,'...
+%         'replicate2 int not null, replicate3 int not null, average double not null,'...
+%         'csS double not null, csM double not null)'], tablename_raw));
+% 
+%     colnames_raw = {'pos','hours'...
+%         'replicate1','replicate2','replicate3',...
+%         'average','csS','csM'};
+% 
+%     avg_data = ControlNorm(density,hours,tablename_jpeg,tablename_p2o,p2c_info,cont.name);
+% 
+%     for ii = 1:length(avg_data)
+%         for iii = 1:length(avg_data{ii})
+%             if ~isempty(avg_data{ii}{iii})
+%                 avg_data{ii}{iii}.csS(isnan(avg_data{ii}{iii}.csS)) = 0;
+%                 avg_data{ii}{iii}.csM(isnan(avg_data{ii}{iii}.csM)) = 0;
+%                 datainsert(conn,tablename_raw,colnames_raw,avg_data{ii}{iii});
+%             end
+%         end
+%     end
 
-    cs = load_colony_sizes(files);
-    size(cs)    % should be = (number of plates x 3 x number of time points) x density
-
-%%  Mean the colony sizes from each of the images
-
-    cs_mean = [];
-    tmp = cs';
-
-    for ii = 1:3:length(files)
-        cs_mean = [cs_mean, mean(tmp(:,ii:ii+2),2)];
-    end
-
-    cs_mean = cs_mean';
-
-%%  Putting Colony Size(pixels) and averages together
-
-    master = [];
-    tmp = [];
-    i = 1;
-    for ii = 1:3:size(cs,1)
-        tmp = [cs(ii,:); cs(ii+1,:); cs(ii+2,:);...
-            cs_mean(i,:)];
-        master = [master, tmp];
-        i = i + 1;
-    end
-    master = master';
-
-%%  Upload JPEG Data to SQL
-
-    connectSQL;
-
-    exec(conn, sprintf('drop table %s',tablename_jpeg));  
-    exec(conn, sprintf(['create table %s (pos int not null, hours int not null,'...
-        'replicate1 int not null,'...
-        'replicate2 int not null, replicate3 int not null, average double not null)'], tablename_jpeg));
-
-    colnames_jpeg = {'pos','hours'...
-        'replicate1','replicate2','replicate3',...
-        'average'};
-
-    tmpdata = [];
-    for ii=1:length(hours)
-        tmpdata = [tmpdata; [p2c.pos, ones(length(p2c.pos),1)*hours(ii)]];
-    end
-
-    data = [tmpdata,master];
-    tic
-    datainsert(conn,tablename_jpeg,colnames_jpeg,data);
-    toc
-
-%%  Upload RAW Data to SQL with Control Normalization
-
-    hours = fetch(conn, sprintf(['select distinct hours from %s ',...
-        'order by hours asc'], tablename_jpeg));
-    hours = hours.hours;
-
-    exec(conn, sprintf('drop table %s',tablename_raw));  
-    exec(conn, sprintf(['create table %s (pos int not null, hours int not null,'...
-        'replicate1 int not null,'...
-        'replicate2 int not null, replicate3 int not null, average double not null,'...
-        'csS double not null, csM double not null)'], tablename_raw));
-
-    colnames_raw = {'pos','hours'...
-        'replicate1','replicate2','replicate3',...
-        'average','csS','csM'};
-
-    avg_data = ControlNorm(density,hours,tablename_jpeg,tablename_p2o,p2c_info,cont.name);
-
-    for ii = 1:length(avg_data)
-        for iii = 1:length(avg_data{ii})
-            if ~isempty(avg_data{ii}{iii})
-                avg_data{ii}{iii}.csS(isnan(avg_data{ii}{iii}.csS)) = 0;
-                avg_data{ii}{iii}.csM(isnan(avg_data{ii}{iii}.csM)) = 0;
-                datainsert(conn,tablename_raw,colnames_raw,avg_data{ii}{iii});
-            end
-        end
-    end
-
+%%  OLD RAW DATA
+%   Not using Control Normalization
+    
+    old_raw(files,density,p2c,hours,tablename_raw);
+    
 %%  RAW to SPATIAL
 
+    connectSQL;
+    
     clear data
 
     exec(conn, sprintf('drop table %s',tablename_spa));
@@ -552,61 +559,61 @@
 
 %%  RESULTS using Q-Values
 
-    exec(conn, sprintf('drop table %s',tablename_res_efdr));
-    exec(conn, sprintf(['create table %s (orf_name varchar(255) not null, ',...
-        'hours int not null, N int not null, cs_median double null, ',...
-        'p double null, q double null, ',...
-        'effect_cs int not null, protogene int not null)'],tablename_res_efdr));
-
-    colnames_res_efdr = {'orf_name','hours','N',...
-        'cs_median','p','q','effect_cs','protogene'};
-
-    for ii = 1:length(hours)
-        query = sprintf(['select a.orf_name, a.hours, b.N, b.cs_median, a.p, a.q ',...
-            'from %s a, %s b ',...
-            'where a.hours = %d and b.hours = a.hours ',...
-            'and a.orf_name = b.orf_name and a.stat > 0 ',...
-            'and a.q <= 0.05 ',...
-            'order by cs_median desc'],tablename_qval,tablename_fits,...
-            hours(ii));
-        ben_efdr = fetch(conn, query);    
-        if isempty(ben_efdr) ~= 1
-            ben_efdr.effect_cs = ones(length(ben_efdr.orf_name),1);
-            ben_efdr.protogene = ismember(ben_efdr.orf_name, proto.orf_name);
-            datainsert(conn,tablename_res_efdr,colnames_res_efdr,ben_efdr);
-        end
-
-        query = sprintf(['select a.orf_name, a.hours, b.N, b.cs_median, a.p, a.q ',...
-            'from %s a, %s b ',...
-            'where a.hours = %d and b.hours = a.hours ',...
-            'and a.orf_name = b.orf_name and a.stat < 0 ',...
-            'and a.q <= 0.05 ',...
-            'order by cs_median desc'],tablename_qval,tablename_fits,...
-            hours(ii));
-        del_efdr = fetch(conn, query);    
-        if isempty(del_efdr) ~= 1
-            del_efdr.effect_cs = ones(length(del_efdr.orf_name),1).*-1;
-            del_efdr.protogene = ismember(del_efdr.orf_name, proto.orf_name);
-            datainsert(conn,tablename_res_efdr,colnames_res_efdr,del_efdr);
-        end
-
-        query = sprintf(['select a.orf_name, a.hours, a.N, a.cs_median, '...
-            'b.p, b.q ',...
-            'from %s a, %s b ',...
-            'where a.hours = %d and a.hours = b.hours ',...
-            'and a.orf_name = b.orf_name ',...
-            'and a.orf_name not in ',...
-            '(select orf_name from %s ',...
-            'where hours = %d) ',...
-            'order by a.cs_median desc'],tablename_fits,...
-            tablename_qval,hours(ii),tablename_res_efdr,hours(ii));
-        neut_efdr = fetch(conn, query);     
-        if isempty(neut_efdr) ~= 1
-            neut_efdr.effect_cs = zeros(length(neut_efdr.orf_name),1);
-            neut_efdr.protogene = ismember(neut_efdr.orf_name, proto.orf_name);
-            datainsert(conn,tablename_res_efdr,colnames_res_efdr,neut_efdr);
-        end
-    end
+%     exec(conn, sprintf('drop table %s',tablename_res_efdr));
+%     exec(conn, sprintf(['create table %s (orf_name varchar(255) not null, ',...
+%         'hours int not null, N int not null, cs_median double null, ',...
+%         'p double null, q double null, ',...
+%         'effect_cs int not null, protogene int not null)'],tablename_res_efdr));
+% 
+%     colnames_res_efdr = {'orf_name','hours','N',...
+%         'cs_median','p','q','effect_cs','protogene'};
+% 
+%     for ii = 1:length(hours)
+%         query = sprintf(['select a.orf_name, a.hours, b.N, b.cs_median, a.p, a.q ',...
+%             'from %s a, %s b ',...
+%             'where a.hours = %d and b.hours = a.hours ',...
+%             'and a.orf_name = b.orf_name and a.stat > 0 ',...
+%             'and a.q <= 0.05 ',...
+%             'order by cs_median desc'],tablename_qval,tablename_fits,...
+%             hours(ii));
+%         ben_efdr = fetch(conn, query);    
+%         if isempty(ben_efdr) ~= 1
+%             ben_efdr.effect_cs = ones(length(ben_efdr.orf_name),1);
+%             ben_efdr.protogene = ismember(ben_efdr.orf_name, proto.orf_name);
+%             datainsert(conn,tablename_res_efdr,colnames_res_efdr,ben_efdr);
+%         end
+% 
+%         query = sprintf(['select a.orf_name, a.hours, b.N, b.cs_median, a.p, a.q ',...
+%             'from %s a, %s b ',...
+%             'where a.hours = %d and b.hours = a.hours ',...
+%             'and a.orf_name = b.orf_name and a.stat < 0 ',...
+%             'and a.q <= 0.05 ',...
+%             'order by cs_median desc'],tablename_qval,tablename_fits,...
+%             hours(ii));
+%         del_efdr = fetch(conn, query);    
+%         if isempty(del_efdr) ~= 1
+%             del_efdr.effect_cs = ones(length(del_efdr.orf_name),1).*-1;
+%             del_efdr.protogene = ismember(del_efdr.orf_name, proto.orf_name);
+%             datainsert(conn,tablename_res_efdr,colnames_res_efdr,del_efdr);
+%         end
+% 
+%         query = sprintf(['select a.orf_name, a.hours, a.N, a.cs_median, '...
+%             'b.p, b.q ',...
+%             'from %s a, %s b ',...
+%             'where a.hours = %d and a.hours = b.hours ',...
+%             'and a.orf_name = b.orf_name ',...
+%             'and a.orf_name not in ',...
+%             '(select orf_name from %s ',...
+%             'where hours = %d) ',...
+%             'order by a.cs_median desc'],tablename_fits,...
+%             tablename_qval,hours(ii),tablename_res_efdr,hours(ii));
+%         neut_efdr = fetch(conn, query);     
+%         if isempty(neut_efdr) ~= 1
+%             neut_efdr.effect_cs = zeros(length(neut_efdr.orf_name),1);
+%             neut_efdr.protogene = ismember(neut_efdr.orf_name, proto.orf_name);
+%             datainsert(conn,tablename_res_efdr,colnames_res_efdr,neut_efdr);
+%         end
+%     end
         
 %%  END OF ANALYSIS
 %%
