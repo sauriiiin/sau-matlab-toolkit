@@ -81,11 +81,13 @@
             
         %%  Fix files that failed
         
-            for ii = 1 : length(pos)
-                tic;
-                analyze_image(files{pos(ii)}, params{:});
-                toc;
-            end
+%             for ii = 1 : length(pos)
+%                 tic;
+%                 analyze_image(files{pos(ii)}, params{:});
+%                 toc;
+%             end
+            
+            analyze_directory_of_images(files(pos), params{:} );
 
         %%  Manually fix images #1
 
