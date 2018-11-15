@@ -154,15 +154,15 @@
         'Replicates',1,...
         {'4'})));
 
-    if density >384
-        prompt={'Enter the name of your source table:'};
-        tablename_null = char(inputdlg(prompt,...
-            'Source Table',1,...
-            {'expt_384_SPATIAL'}));
-        source_nulls = fetch(conn, sprintf(['select a.pos from %s a ',...
-            'where a.csS is NULL ',...
-            'order by a.pos asc'],tablename_null));
-    end
+%     if density >384
+%         prompt={'Enter the name of your source table:'};
+%         tablename_null = char(inputdlg(prompt,...
+%             'Source Table',1,...
+%             {'expt_384_SPATIAL'}));
+%         source_nulls = fetch(conn, sprintf(['select a.pos from %s a ',...
+%             'where a.csS is NULL ',...
+%             'order by a.pos asc'],tablename_null));
+%     end
     
     prompt={'Enter the control stain orf_name:'};
     cont.name = char(inputdlg(prompt,...
@@ -174,10 +174,10 @@
         'Border Positions',1,...
         {'expt_borderpos'}));
     
-    prompt={'Enter the Smudge Box Table Name:'};
-    tablename_sbox = char(inputdlg(prompt,...
-        'Smudge Box',1,...
-        {'expt_smudgebox'}));
+%     prompt={'Enter the Smudge Box Table Name:'};
+%     tablename_sbox = char(inputdlg(prompt,...
+%         'Smudge Box',1,...
+%         {'expt_smudgebox'}));
     
 %   Fetch Protogenes
 
@@ -322,27 +322,27 @@
             data{ii}.csS(borders) = 99999;
             data{ii}.csM(borders) = 99999;
 
-%           NULLs from SMUDGE BOX
-            smudge = fetch(conn, sprintf('select pos from %s',...
-                tablename_sbox));
-            smudge = smudge.pos;
-            [la, lb] = ismember(smudge, data{ii}.pos);
-            smudge = lb(la);
-            data{ii}.average(smudge) = 99999;
-            data{ii}.csS(smudge) = 99999;
-            data{ii}.csM(smudge) = 99999;
-
-%           NULLs from Source Plates
-            if density >384
-                source_zeros = [];
-                for i = 1:replicate
-                    [la, lb] = ismember(source_nulls.pos, data{ii}.pos - (poslim(1)*i));
-                    source_zeros = lb(la);
-                    data{ii}.average(source_zeros) = 99999;
-                    data{ii}.csS(source_zeros) = 99999;
-                    data{ii}.csM(source_zeros) = 99999;
-                end
-            end
+% %           NULLs from SMUDGE BOX
+%             smudge = fetch(conn, sprintf('select pos from %s',...
+%                 tablename_sbox));
+%             smudge = smudge.pos;
+%             [la, lb] = ismember(smudge, data{ii}.pos);
+%             smudge = lb(la);
+%             data{ii}.average(smudge) = 99999;
+%             data{ii}.csS(smudge) = 99999;
+%             data{ii}.csM(smudge) = 99999;
+% 
+% %           NULLs from Source Plates
+%             if density >384
+%                 source_zeros = [];
+%                 for i = 1:replicate
+%                     [la, lb] = ismember(source_nulls.pos, data{ii}.pos - (poslim(1)*i));
+%                     source_zeros = lb(la);
+%                     data{ii}.average(source_zeros) = 99999;
+%                     data{ii}.csS(source_zeros) = 99999;
+%                     data{ii}.csM(source_zeros) = 99999;
+%                 end
+%             end
 
             tic
             datainsert(conn,tablename_spa,colnames_spa,data{ii}); 
