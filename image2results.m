@@ -31,7 +31,7 @@
 %%  Initialization
 
 %     Set preferences with setdbprefs.
-%     setdbprefs('DataReturnFormat', 'structure');
+    setdbprefs('DataReturnFormat', 'structure');
     setdbprefs({'NullStringRead';'NullStringWrite';'NullNumberRead';'NullNumberWrite'},...
                   {'null';'null';'NaN';'NaN'})
     
