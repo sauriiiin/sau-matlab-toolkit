@@ -7,9 +7,9 @@
 
 %%  Load Paths to Files and Data
 
-    col_analyzer_path = '/Users/saurinparikh/Documents/GitHub/Matlab-Colony-Analyzer-Toolkit';
-    bean_toolkit_path = '/Users/saurinparikh/Documents/GitHub/bean-matlab-toolkit';
-    sau_toolkit_path = '/Users/saurinparikh/Documents/GitHub/sau-matlab-toolkit';
+    col_analyzer_path = '/Users/saur1n/Documents/GitHub/Matlab-Colony-Analyzer-Toolkit';
+    bean_toolkit_path = '/Users/saur1n/Documents/GitHub/bean-matlab-toolkit';
+    sau_toolkit_path = '/Users/saur1n/Documents/GitHub/sau-matlab-toolkit';
     addpath(genpath(col_analyzer_path));
     addpath(genpath(bean_toolkit_path));
     addpath(genpath(sau_toolkit_path));
@@ -20,7 +20,7 @@
 
 %%  Initialization
     
-    hours = []; 
+%     hours = []; 
     files = {};
     filedir = dir(uigetdir());
     dirFlags = [filedir.isdir] & ~strcmp({filedir.name},'.') & ~strcmp({filedir.name},'..');
@@ -28,13 +28,13 @@
     for k = 1 : length(subFolders)
         tmpdir = strcat(subFolders(k).folder, '/',  subFolders(k).name);
         files = [files; dirfiles(tmpdir, '*.JPG')];  
-        hrs = strfind(tmpdir, '/'); hrs = tmpdir(hrs(end)+1:end);
-        hours = [hours, str2num(hrs(1:end-1))];
+%         hrs = strfind(tmpdir, '/'); hrs = tmpdir(hrs(end)+1:end);
+%         hours = [hours, str2num(hrs(1:end-1))];
     end
     
-    if isempty(hours)
-        hours = -1;
-    end
+%     if isempty(hours)
+%         hours = -1;
+%     end
     
     switch questdlg('Is density 384 or higher?',...
         'Density Options',...
@@ -87,7 +87,7 @@
 %                 toc;
 %             end
             
-            analyze_directory_of_images(files(pos), params{:} );
+%             analyze_directory_of_images(files(pos), params{:} );
 
         %%  Manually fix images #1
 
