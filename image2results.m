@@ -122,7 +122,7 @@
     tablename_efdr2     = sprintf('%s_%d_eFDR2',expt_name,density);
     tablename_res       = sprintf('%s_%d_RES',expt_name,density);
     tablename_res_es    = sprintf('%s_%d_RES_ES',expt_name,density);
-    tablename_res_efdr  = sprintf('%s_%d_RES_eFDR2',expt_name,density);
+    tablename_res_efdr  = sprintf('%s_%d_RES_eFDR',expt_name,density);
     
 %   MySQL Connection and fetch initial data
 
@@ -323,14 +323,14 @@
             data{ii}.csM(borders) = 99999;
 
 % %           NULLs from SMUDGE BOX
-%             smudge = fetch(conn, sprintf('select pos from %s',...
-%                 tablename_sbox));
-%             smudge = smudge.pos;
-%             [la, lb] = ismember(smudge, data{ii}.pos);
-%             smudge = lb(la);
-%             data{ii}.average(smudge) = 99999;
-%             data{ii}.csS(smudge) = 99999;
-%             data{ii}.csM(smudge) = 99999;
+            smudge = fetch(conn, sprintf('select pos from %s',...
+                tablename_sbox));
+            smudge = smudge.pos;
+            [la, lb] = ismember(smudge, data{ii}.pos);
+            smudge = lb(la);
+            data{ii}.average(smudge) = 99999;
+            data{ii}.csS(smudge) = 99999;
+            data{ii}.csM(smudge) = 99999;
 % 
 % %           NULLs from Source Plates
 %             if density >384
@@ -427,7 +427,7 @@
             pdata{ii}.hours = ones(length(pdata{ii}.orf_name),1)*hours(ii);
             pdata{ii}       = orderfields(pdata{ii}, [1,4,2,3]);
             tic
-            datainsert(conn,tablename_pval,colnames_pval,pdata{ii});
+            sqlwrite(conn,tablename_pval,struct2table(pdata{ii}));
             toc
         end
 
@@ -465,7 +465,7 @@
             qdata{ii}.hours = allp.hours;
             qdata{ii}       = orderfields(qdata{ii}, [1,6,2,5,3,4]);
             tic
-            datainsert(conn,tablename_qval,colnames_qval,qdata{ii});
+            sqlwrite(conn,tablename_qval,struct2table(qdata{ii}));
             toc
         end
 
