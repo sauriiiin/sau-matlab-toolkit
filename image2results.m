@@ -17,9 +17,9 @@
 
 %%  Load Paths to Files and Data
 
-    col_analyzer_path = '/Users/saurinparikh/Documents/GitHub/Matlab-Colony-Analyzer-Toolkit';
-    bean_toolkit_path = '/Users/saurinparikh/Documents/GitHub/bean-matlab-toolkit';
-    sau_toolkit_path = '/Users/saurinparikh/Documents/GitHub/sau-matlab-toolkit';
+    col_analyzer_path = '/Users/saur1n/Documents/GitHub/Matlab-Colony-Analyzer-Toolkit';
+    bean_toolkit_path = '/Users/saur1n/Documents/GitHub/bean-matlab-toolkit';
+    sau_toolkit_path = '/Users/saur1n/Documents/GitHub/sau-matlab-toolkit';
     addpath(genpath(col_analyzer_path));
     addpath(genpath(bean_toolkit_path));
     addpath(genpath(sau_toolkit_path));
@@ -174,10 +174,10 @@
         'Border Positions',1,...
         {'expt_borderpos'}));
     
-%     prompt={'Enter the Smudge Box Table Name:'};
-%     tablename_sbox = char(inputdlg(prompt,...
-%         'Smudge Box',1,...
-%         {'expt_smudgebox'}));
+    prompt={'Enter the Smudge Box Table Name:'};
+    tablename_sbox = char(inputdlg(prompt,...
+        'Smudge Box',1,...
+        {'expt_smudgebox'}));
     
 %   Fetch Protogenes
 
@@ -291,14 +291,14 @@
                 '%s where hours = %d'],tablename_raw,hours(ii)));
 
 %           Cleanning RAW DATA
-            n_plate = length(data{ii}.pos)/density;
-            rep_data = [data{ii}.replicate1, data{ii}.replicate2,...
-                data{ii}.replicate3];
-            [cleaned_rep_data, data{ii}.average] = ...
-                    clean_raw_data(rep_data, n_plate, density, 10);
-            data{ii}.replicate1 = cleaned_rep_data(:,1);
-            data{ii}.replicate2 = cleaned_rep_data(:,2);
-            data{ii}.replicate3 = cleaned_rep_data(:,3); 
+%             n_plate = length(data{ii}.pos)/density;
+%             rep_data = [data{ii}.replicate1, data{ii}.replicate2,...
+%                 data{ii}.replicate3];
+%             [cleaned_rep_data, data{ii}.average] = ...
+%                     clean_raw_data(rep_data, n_plate, density, 20);
+%             data{ii}.replicate1 = cleaned_rep_data(:,1);
+%             data{ii}.replicate2 = cleaned_rep_data(:,2);
+%             data{ii}.replicate3 = cleaned_rep_data(:,3); 
 
 %           Avoiding light artefact
             pos_zeros = fetch(conn, sprintf(['select pos from ',...
