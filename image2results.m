@@ -115,11 +115,9 @@
     tablename_fits      = sprintf('%s_%d_FITNESS_STATS',expt_name,density);
     tablename_es        = sprintf('%s_%d_FITNESS_ES',expt_name,density);
     tablename_pval      = sprintf('%s_%d_PVALUE',expt_name,density);
-    tablename_pval2     = sprintf('%s_%d_PVALUE2',expt_name,density);
     tablename_qval      = sprintf('%s_%d_QVALUE',expt_name,density);
     tablename_perc      = sprintf('%s_%d_PERC',expt_name,density);
     tablename_efdr      = sprintf('%s_%d_eFDR',expt_name,density);
-    tablename_efdr2     = sprintf('%s_%d_eFDR2',expt_name,density);
     tablename_res       = sprintf('%s_%d_RES',expt_name,density);
     tablename_res_es    = sprintf('%s_%d_RES_ES',expt_name,density);
     tablename_res_efdr  = sprintf('%s_%d_RES_eFDR',expt_name,density);
@@ -419,16 +417,18 @@
                 '%s where orf_name is not NULL ',...
                 'and orf_name != "null" and hours = %d ',...
                 'order by orf_name asc'], tablename_fit, hours(ii)));
+            
+            if isempty(all) ~= 1
+                cont.posy   = find(strcmpi(all.orf_name, cont.name)==1);
+                cont.yield  = all.fitness(cont.posy, 1);
 
-            cont.posy   = find(strcmpi(all.orf_name, cont.name)==1);
-            cont.yield  = all.fitness(cont.posy, 1);
-
-            pdata{ii}       = fitp(cont, all);
-            pdata{ii}.hours = ones(length(pdata{ii}.orf_name),1)*hours(ii);
-            pdata{ii}       = orderfields(pdata{ii}, [1,4,2,3]);
-            tic
-            sqlwrite(conn,tablename_pval,struct2table(pdata{ii}));
-            toc
+                pdata{ii}       = fitp(cont, all);
+                pdata{ii}.hours = ones(length(pdata{ii}.orf_name),1)*hours(ii);
+                pdata{ii}       = orderfields(pdata{ii}, [1,4,2,3]);
+                tic
+                sqlwrite(conn,tablename_pval,struct2table(pdata{ii}));
+                toc
+            end
         end
 
 %%  FITNESS to Emperical P-VALUES
@@ -461,12 +461,15 @@
             allp = fetch(conn, sprintf(['select * FROM %s ',...
                 'where hours = %d and orf_name is not NULL and orf_name != "null"'],...
                 tablename_pval,hours(ii))); 
-            qdata{ii}       = fitq2(allp);
-            qdata{ii}.hours = allp.hours;
-            qdata{ii}       = orderfields(qdata{ii}, [1,6,2,5,3,4]);
-            tic
-            sqlwrite(conn,tablename_qval,struct2table(qdata{ii}));
-            toc
+            
+            if isempty(allp) ~= 1
+                qdata{ii}       = fitq2(allp);
+                qdata{ii}.hours = allp.hours;
+                qdata{ii}       = orderfields(qdata{ii}, [1,6,2,5,3,4]);
+                tic
+                sqlwrite(conn,tablename_qval,struct2table(qdata{ii}));
+                toc
+            end
         end
 
 %%  EFECT_SIZE CALCULATION
