@@ -28,26 +28,26 @@
                 'order by orf_name asc'],tablename_fits,hours(iii),contname));
 
             m = [];
-            tt = 100000;
+            tt = 1000000;
             for ii = 1:tt
                 [temp, ~] = datasample(contfit.fitness, n);
-                m = [m; median(temp)];
+                m = [m; mean(temp)];
             end
     %         histogram(m);
 
             pvals = [];
             stat = [];
             for i = 1:length(orffit.orf_name)
-                if sum(m<orffit.cs_median(i)) < tt/2
-                    if m<orffit.cs_median(i) == 0
+                if sum(m<orffit.cs_mean(i)) < tt/2
+                    if m<orffit.cs_mean(i) == 0
                         pvals = [pvals; 1/tt];
                         stat = [stat; (orffit.cs_mean(i) - contmean)/contstd];
                     else
-                        pvals = [pvals; (sum(m<=orffit.cs_median(i))+1)/tt];
+                        pvals = [pvals; (sum(m<=orffit.cs_mean(i))+1)/tt];
                         stat = [stat; (orffit.cs_mean(i) - contmean)/contstd];
                     end
                 else
-                    pvals = [pvals; (sum(m>=orffit.cs_median(i))+1)/tt];
+                    pvals = [pvals; (sum(m>=orffit.cs_mean(i))+1)/tt];
                     stat = [stat; (orffit.cs_mean(i) - contmean)/contstd];
                 end
             end
