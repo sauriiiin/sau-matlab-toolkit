@@ -439,74 +439,74 @@
 
 %%  FITNESS to Emperical P-VALUES
     
-%         exec(conn, sprintf('drop table %s',tablename_epval));
-%         exec(conn, sprintf(['create table %s (orf_name varchar(255) null,'...
-%             'hours int not null, p double null, stat double null)'],tablename_epval));
-%         
-%         colnames_epval = {'orf_name','hours','p','stat'};
-%         
-% %         pdata = emp_p(tablename_fit,tablename_fits,hours,cont.name,16);
-% 
-% %   Set of replicate wise empirical p-value calculation
-%         for iii = 1:length(hours)
-%             contpos = fetch(conn, sprintf(['select pos from %s ',...
-%                 'where orf_name = ''%s'' and pos < 10000'],...
-%                 tablename_p2o,cont.name));
-%             contpos = contpos.pos + [110000,120000,130000,140000,...
-%                 210000,220000,230000,240000];
-% 
-%             contfit = [];
-%             for ii = 1:length(contpos)
-%                 temp = fetch(conn, sprintf(['select fitness from %s ',...
-%                     'where hours = %d and pos in (%s) ',...
-%                     'and fitness is not null'],tablename_fit,hours,...
-%                     sprintf('%d,%d,%d,%d,%d,%d,%d,%d',contpos(ii,:))));
-%                 if nansum(temp.fitness) > 0
-%                     contfit = [contfit, nanmean(temp.fitness)];
-%                 end
-%             end
-% 
-%             contmean = nanmean(contfit);
-%             contstd = nanstd(contfit);
-% 
-%             orffit = fetch(conn, sprintf(['select orf_name, cs_median, ',...
-%                 'cs_mean, cs_std from %s ',...
-%                 'where hours = %d and orf_name != ''%s'' ',...
-%                 'order by orf_name asc'],tablename_fits,hours,cont.name));
-% 
-%             m = contfit';
-%             tt = length(m);
-% 
-%             pvals = [];
-%             stat = [];
-%             for i = 1:length(orffit.orf_name)
-%                 if sum(m<orffit.cs_mean(i)) < tt/2
-%                     if m<orffit.cs_mean(i) == 0
-%                         pvals = [pvals; 1/tt];
-%                         stat = [stat; (orffit.cs_mean(i) - contmean)/contstd];
-%                     else
-%                         pvals = [pvals; ((sum(m<=orffit.cs_mean(i))+1)/tt)*2];
-%                         stat = [stat; (orffit.cs_mean(i) - contmean)/contstd];
-%                     end
-%                 else
-%                     pvals = [pvals; ((sum(m>=orffit.cs_mean(i))+1)/tt)*2];
-%                     stat = [stat; (orffit.cs_mean(i) - contmean)/contstd];
-%                 end
-%             end
-% 
-%             pdata{iii}.orf_name = orffit.orf_name;
-%             pdata{iii}.hours = ones(length(pdata{iii}.orf_name),1)*hours(iii);
-%             pdata{iii}.p = num2cell(pvals);
-%             pdata{iii}.p(cellfun(@isnan,pdata{iii}.p)) = {[]};
-%             pdata{iii}.stat = num2cell(stat);
-%             pdata{iii}.stat(cellfun(@isnan,pdata{iii}.stat)) = {[]};
-%         end
-%         
-%         tic
-%         for ii = 1:length(hours)
-%             datainsert(conn,tablename_epval,colnames_epval,pdata{ii});
-%         end
-%         toc
+        exec(conn, sprintf('drop table %s',tablename_epval));
+        exec(conn, sprintf(['create table %s (orf_name varchar(255) null,'...
+            'hours int not null, p double null, stat double null)'],tablename_epval));
+        
+        colnames_epval = {'orf_name','hours','p','stat'};
+        
+%         pdata = emp_p(tablename_fit,tablename_fits,hours,cont.name,16);
+
+%   Set of replicate wise empirical p-value calculation
+        for iii = 1:length(hours)
+            contpos = fetch(conn, sprintf(['select pos from %s ',...
+                'where orf_name = ''%s'' and pos < 10000'],...
+                tablename_p2o,cont.name));
+            contpos = contpos.pos + [110000,120000,130000,140000,...
+                210000,220000,230000,240000];
+
+            contfit = [];
+            for ii = 1:length(contpos)
+                temp = fetch(conn, sprintf(['select fitness from %s ',...
+                    'where hours = %d and pos in (%s) ',...
+                    'and fitness is not null'],tablename_fit,hours,...
+                    sprintf('%d,%d,%d,%d,%d,%d,%d,%d',contpos(ii,:))));
+                if nansum(temp.fitness) > 0
+                    contfit = [contfit, nanmean(temp.fitness)];
+                end
+            end
+
+            contmean = nanmean(contfit);
+            contstd = nanstd(contfit);
+
+            orffit = fetch(conn, sprintf(['select orf_name, cs_median, ',...
+                'cs_mean, cs_std from %s ',...
+                'where hours = %d and orf_name != ''%s'' ',...
+                'order by orf_name asc'],tablename_fits,hours,cont.name));
+
+            m = contfit';
+            tt = length(m);
+
+            pvals = [];
+            stat = [];
+            for i = 1:length(orffit.orf_name)
+                if sum(m<orffit.cs_mean(i)) < tt/2
+                    if m<orffit.cs_mean(i) == 0
+                        pvals = [pvals; 1/tt];
+                        stat = [stat; (orffit.cs_mean(i) - contmean)/contstd];
+                    else
+                        pvals = [pvals; ((sum(m<=orffit.cs_mean(i))+1)/tt)*2];
+                        stat = [stat; (orffit.cs_mean(i) - contmean)/contstd];
+                    end
+                else
+                    pvals = [pvals; ((sum(m>=orffit.cs_mean(i))+1)/tt)*2];
+                    stat = [stat; (orffit.cs_mean(i) - contmean)/contstd];
+                end
+            end
+
+            pdata{iii}.orf_name = orffit.orf_name;
+            pdata{iii}.hours = ones(length(pdata{iii}.orf_name),1)*hours(iii);
+            pdata{iii}.p = num2cell(pvals);
+            pdata{iii}.p(cellfun(@isnan,pdata{iii}.p)) = {[]};
+            pdata{iii}.stat = num2cell(stat);
+            pdata{iii}.stat(cellfun(@isnan,pdata{iii}.stat)) = {[]};
+        end
+        
+        tic
+        for ii = 1:length(hours)
+            datainsert(conn,tablename_epval,colnames_epval,pdata{ii});
+        end
+        toc
 
 %%  P-VALUES to Q-VALUES
 
