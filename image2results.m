@@ -178,10 +178,10 @@
         'Border Positions',1,...
         {'expt_borderpos'}));
     
-    prompt={'Enter the Smudge Box Table Name:'};
-    tablename_sbox = char(inputdlg(prompt,...
-        'Smudge Box',1,...
-        {'expt_smudgebox'}));
+%     prompt={'Enter the Smudge Box Table Name:'};
+%     tablename_sbox = char(inputdlg(prompt,...
+%         'Smudge Box',1,...
+%         {'expt_smudgebox'}));
     
 %   Fetch Protogenes
 
@@ -327,14 +327,14 @@
             data{ii}.csM(borders) = 99999;
 
 % %           NULLs from SMUDGE BOX
-            smudge = fetch(conn, sprintf('select pos from %s',...
-                tablename_sbox));
-            smudge = smudge.pos;
-            [la, lb] = ismember(smudge, data{ii}.pos);
-            smudge = lb(la);
-            data{ii}.average(smudge) = 99999;
-            data{ii}.csS(smudge) = 99999;
-            data{ii}.csM(smudge) = 99999;
+%             smudge = fetch(conn, sprintf('select pos from %s',...
+%                 tablename_sbox));
+%             smudge = smudge.pos;
+%             [la, lb] = ismember(smudge, data{ii}.pos);
+%             smudge = lb(la);
+%             data{ii}.average(smudge) = 99999;
+%             data{ii}.csS(smudge) = 99999;
+%             data{ii}.csM(smudge) = 99999;
 % 
 % %           NULLs from Source Plates
 %             if density >384
