@@ -109,21 +109,13 @@
     
 %   MySQL Table Details  
     
-    tablename_jpeg      = sprintf('%s_%d_JPEG',expt_name,density); 
-    tablename_raw       = sprintf('%s_%d_RAW',expt_name,density);
-    tablename_ibg       = sprintf('%s_%d_iBG',expt_name,density);
-    tablename_spa       = sprintf('%s_%d_SPATIAL',expt_name, density);
+    tablename_jpeg      = sprintf('%s_%d_JPEG',expt_name,density);
+    tablename_norm      = sprintf('%s_%d_NORM',expt_name,density);
     tablename_fit       = sprintf('%s_%d_FITNESS',expt_name,density);
     tablename_fits      = sprintf('%s_%d_FITNESS_STATS',expt_name,density);
     tablename_es        = sprintf('%s_%d_FITNESS_ES',expt_name,density);
     tablename_pval      = sprintf('%s_%d_PVALUE',expt_name,density);
-    tablename_epval     = sprintf('%s_%d_EPVALUE',expt_name,density);
-    tablename_qval      = sprintf('%s_%d_QVALUE',expt_name,density);
-    tablename_perc      = sprintf('%s_%d_PERC',expt_name,density);
-    tablename_efdr      = sprintf('%s_%d_eFDR',expt_name,density);
     tablename_res       = sprintf('%s_%d_RES',expt_name,density);
-    tablename_res_es    = sprintf('%s_%d_RES_ES',expt_name,density);
-    tablename_res_efdr  = sprintf('%s_%d_RES_eFDR',expt_name,density);
     
 %   MySQL Connection and fetch initial data
 
@@ -250,7 +242,7 @@
         datainsert(conn,tablename_jpeg,colnames_jpeg,data);
         toc
 
-%%  SPATIAL CLEAN UP
+%%  SPATIAL cleanup
 %   Border colonies, light artefact and smudge correction
 
         exec(conn, sprintf(['update %s ',...
@@ -267,9 +259,148 @@
             'where pos in ',...
             '(select pos from %s)'],tablename_jpeg,tablename_sbox));
     
-%%  Upload JPEG Data to RAW with Linear Interpolation based CN
+%%  Upload JPEG to NORM data
+%   Linear Interpolation based CN
 
+        hours = fetch(conn, sprintf(['select distinct hours from %s ',...
+            'order by hours asc'], tablename_jpeg));
+        hours = hours.hours;
+        
+        data_fit = LinearInNorm(hours,n_plates,p2c_info,cont.name,...
+            tablename_p2o,tablename_jpeg);
 
+        exec(conn, sprintf('drop table %s',tablename_norm));
+        exec(conn, sprintf(['create table %s ( ',...
+                    'pos int(11) not NULL, ',...
+                    'hours int(11) not NULL, ',...
+                    'bg double default NULL, ',...
+                    'average double default NULL, ',...
+                    'fitness double default NULL ',...
+                    ')'],tablename_norm));     
+        datainsert(conn, tablename_norm,{'pos','hours','bg','average','fitness'},data_fit);
 
+        exec(conn, sprintf('drop table %s',tablename_fit)); 
+        exec(conn, sprintf(['create table %s ',...
+            '(select b.orf_name, a.pos, a.hours, a.bg, a.average, a.fitness ',...
+            'from %s a, %s b ',...
+            'where a.pos = b.pos ',...
+            'order by a.pos asc)'],tablename_fit,tablename_norm,tablename_p2o));
 
+%%  FITNESS STATS
 
+        clear data
+
+        exec(conn, sprintf('drop table %s', tablename_fits));
+        exec(conn, sprintf(['create table %s (orf_name varchar(255) null, ',...
+            'hours int not null, N int not null, cs_mean double null, ',...
+            'cs_median double null, cs_std double null)'],tablename_fits));
+
+        colnames_ifit = {'orf_name','hours','N','cs_mean','cs_median','cs_std'};
+
+        stat_data = fit_stats(tablename_fit);
+        tic
+        datainsert(conn,tablename_fits,colnames_fits,stat_data)
+        toc
+
+%%  EFFECT SIZE
+
+        exec(conn, sprintf('drop table %s', tablename_es));
+        exec(conn, sprintf(['create table %s (orf_name varchar(255) null, ',...
+            'hours int not null, N int not null, cs_mean double null, cs_median double null, ',...
+            'cs_std double null, effect_size double null, ',...
+            'es_n int not null)'],tablename_es));
+
+        colnames_es = {'orf_name','hours','N',...
+            'cs_mean','cs_median','cs_std',...
+            'effect_size','es_n'};
+
+        for ii = 1:length(hours)
+            fit_cont{ii} = fetch(conn, sprintf(['select * from %s ',...
+                'where hours = %d and orf_name = ''%s'''],...
+                tablename_fits,hours(ii),cont.name));
+            fit_orf{ii} = fetch(conn, sprintf(['select * from %s ',...
+                'where hours = %d and orf_name != ''%s'' ',...
+                'order by orf_name asc'],...
+                tablename_fits,hours(ii),cont.name));
+
+            for i = 1:length(fit_orf{ii}.orf_name)
+                [fit_orf{ii}.effect_size(i,:), fit_orf{ii}.es_n(i,:)] = ...
+                    effect_size(fit_cont{ii}.N,fit_cont{ii}.cs_mean,fit_cont{ii}.cs_std,...
+                    fit_orf{ii}.N(i),fit_orf{ii}.cs_mean(i),fit_orf{ii}.cs_std(i),...
+                    1.96,1.96);
+            end
+            tic
+            sqlwrite(conn,tablename_es,fit_orf{ii});
+            toc
+        end
+  
+%%  FITNESS STATS to EMPIRICAL P VALUES
+
+        exec(conn, sprintf('drop table %s',tablename_pval));
+        exec(conn, sprintf(['create table %s (orf_name varchar(255) null,'...
+            'hours int not null, p double null, stat double null)'],tablename_pval));
+
+        colnames_pval = {'orf_name','hours','p','stat'};
+
+        for iii = 1:length(hours)
+            contpos = fetch(conn, sprintf(['select pos from %s ',...
+                'where orf_name = ''%s'' and pos < 10000'],...
+                tablename_p2o,cont.name));
+            contpos = contpos.pos + [110000,120000,130000,140000,...
+                210000,220000,230000,240000];
+
+            contfit = [];
+            for ii = 1:length(contpos)
+                temp = fetch(conn, sprintf(['select fitness from %s ',...
+                    'where hours = %d and pos in (%s) ',...
+                    'and fitness is not null'],tablename_fit,hours,...
+                    sprintf('%d,%d,%d,%d,%d,%d,%d,%d',contpos(ii,:))));
+                if nansum(temp.fitness) > 0
+                    contfit = [contfit, nanmean(temp.fitness)];
+                end
+            end
+
+            contmean = nanmean(contfit);
+            contstd = nanstd(contfit);
+
+            orffit = fetch(conn, sprintf(['select orf_name, cs_median, ',...
+                'cs_mean, cs_std from %s ',...
+                'where hours = %d and orf_name != ''%s'' ',...
+                'order by orf_name asc'],tablename_fits,hours,cont.name));
+
+            m = contfit';
+            tt = length(m);
+
+            pvals = [];
+            stat = [];
+            for i = 1:length(orffit.orf_name)
+                if sum(m<orffit.cs_mean(i)) < tt/2
+                    if m<orffit.cs_mean(i) == 0
+                        pvals = [pvals; 1/tt];
+                        stat = [stat; (orffit.cs_mean(i) - contmean)/contstd];
+                    else
+                        pvals = [pvals; ((sum(m<=orffit.cs_mean(i))+1)/tt)*2];
+                        stat = [stat; (orffit.cs_mean(i) - contmean)/contstd];
+                    end
+                else
+                    pvals = [pvals; ((sum(m>=orffit.cs_mean(i))+1)/tt)*2];
+                    stat = [stat; (orffit.cs_mean(i) - contmean)/contstd];
+                end
+            end
+
+            pdata{iii}.orf_name = orffit.orf_name;
+            pdata{iii}.hours = ones(length(pdata{iii}.orf_name),1)*hours(iii);
+            pdata{iii}.p = num2cell(pvals);
+            pdata{iii}.p(cellfun(@isnan,pdata{iii}.p)) = {[]};
+            pdata{iii}.stat = num2cell(stat);
+            pdata{iii}.stat(cellfun(@isnan,pdata{iii}.stat)) = {[]};
+
+        end
+
+        tic
+        for ii = 1:length(hours)
+            datainsert(conn,tablename_pval,colnames_pval,pdata{ii});
+        end
+        toc
+        
+    end
