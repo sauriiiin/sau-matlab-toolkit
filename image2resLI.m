@@ -110,7 +110,8 @@
 %   MySQL Table Details  
     
     tablename_jpeg      = sprintf('%s_%d_JPEG',expt_name,density); 
-    tablename_raw       = sprintf('%s_%d_RAW',expt_name,density); 
+    tablename_raw       = sprintf('%s_%d_RAW',expt_name,density);
+    tablename_ibg       = sprintf('%s_%d_iBG',expt_name,density);
     tablename_spa       = sprintf('%s_%d_SPATIAL',expt_name, density);
     tablename_fit       = sprintf('%s_%d_FITNESS',expt_name,density);
     tablename_fits      = sprintf('%s_%d_FITNESS_STATS',expt_name,density);
@@ -249,6 +250,23 @@
         datainsert(conn,tablename_jpeg,colnames_jpeg,data);
         toc
 
+%%  SPATIAL CLEAN UP
+%   Border colonies, light artefact and smudge correction
+
+        exec(conn, sprintf(['update %s ',...
+            'set average = NULL ',...
+            'where pos in ',...
+            '(select pos from %s)'],tablename_jpeg,tablename_bpos));
+        
+        exec(conn, sprintf(['update %s ',...
+            'set average = NULL ',...
+            'where average <= 10'],tablename_jpeg));
+        
+        exec(conn, sprintf(['update %s ',...
+            'set average = NULL ',...
+            'where pos in ',...
+            '(select pos from %s)'],tablename_jpeg,tablename_sbox));
+    
 %%  Upload JPEG Data to RAW with Linear Interpolation based CN
 
 

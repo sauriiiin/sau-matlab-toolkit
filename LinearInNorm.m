@@ -11,15 +11,10 @@
 %%
 
     function data_fit = LinearInNorm(hours,n_plates,p2c_info,cont_name,...
-        tablename_p2o,tablename_jpeg,tablename_bpos)
+        tablename_p2o,tablename_jpeg)
     
         connectSQL;
         
-        exec(conn, sprintf(['update %s ',...
-            'set average = NULL ',...
-            'where pos in ',...
-            '(select pos from %s)'],tablename_jpeg,tablename_bpos));
-    
         temp = [];
         for ii = 1:length(hours)
             
