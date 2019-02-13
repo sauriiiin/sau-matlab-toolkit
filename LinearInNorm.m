@@ -56,7 +56,7 @@
 
         %%  CALCULATE BACKGROUND
 
-                all_avg  = col2grid(avg_data.average);
+%                 all_avg  = col2grid(avg_data.average);
 %                 nonzero  = all_avg > 0;
                 cont_pos = col2grid(ismember(pos.all.pos, pos.cont.pos));
                 cont_avg = col2grid(avg_data.average).*cont_pos;
