@@ -304,7 +304,7 @@
             'hours int not null, N int not null, cs_mean double null, ',...
             'cs_median double null, cs_std double null)'],tablename_fits));
 
-        colnames_ifit = {'orf_name','hours','N','cs_mean','cs_median','cs_std'};
+        colnames_fits = {'orf_name','hours','N','cs_mean','cs_median','cs_std'};
 
         stat_data = fit_stats(tablename_fit);
         tic

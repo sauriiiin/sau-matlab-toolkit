@@ -75,8 +75,8 @@
                             (fillmissing(fillmissing(p, 'linear',1),'linear',2)))/2;
                         [x,y] = ndgrid(1:2:32,1:2:48);
                         f = griddedInterpolant(x,y,p,'linear');
-                        plates{1} = f(xq,yq);
-                        [~,x,y,z] = downscale(plates{1});
+                        plates{i} = f(xq,yq);
+                        [~,x,y,z] = downscale(plates{i});
                         bground{i} = plategen(P,x,y,z);
 
                     elseif nansum(nansum(q)) ~= 0 % Top Right
@@ -85,8 +85,8 @@
                             (fillmissing(fillmissing(q, 'linear',1),'linear',2)))/2;
                         [x,y] = ndgrid(1:2:32,2:2:48); 
                         f = griddedInterpolant(x,y,q,'linear');
-                        plates{2} = f(xq,yq);
-                        [x,~,y,z] = downscale(plates{2});
+                        plates{i} = f(xq,yq);
+                        [x,~,y,z] = downscale(plates{i});
                         bground{i} = plategen(x,Q,y,z);
 
                     elseif nansum(nansum(r)) ~= 0 % Bottom Left
@@ -95,8 +95,8 @@
                             (fillmissing(fillmissing(r, 'linear',1),'linear',2)))/2;
                         [x,y] = ndgrid(2:2:32,1:2:48); 
                         f = griddedInterpolant(x,y,r,'linear');
-                        plates{3} = f(xq,yq);
-                        [x,y,~,z] = downscale(plates{3});
+                        plates{i} = f(xq,yq);
+                        [x,y,~,z] = downscale(plates{i});
                         bground{i} = plategen(x,y,R,z);
 
                     else % Bottom Right
@@ -105,8 +105,8 @@
                             (fillmissing(fillmissing(s, 'linear',1),'linear',2)))/2;
                         [x,y] = ndgrid(2:2:32,2:2:48); 
                         f = griddedInterpolant(x,y,s,'linear');
-                        plates{4} = f(xq,yq);
-                        [x,y,z,~] = downscale(plates{4});
+                        plates{i} = f(xq,yq);
+                        [x,y,z,~] = downscale(plates{i});
                         bground{i} = plategen(x,y,z,S);
 
                     end
