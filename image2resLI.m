@@ -313,20 +313,24 @@
             min_avg = min(bg.average);
 
             figure()
-            subplot('Position', [0.05 0.15 0.25 0.7])
+            subplot(2,2,1)
             heatmap(col2grid(bg.average),'ColorLimits',[min_avg max_avg])
-            title('Observed')
-            subplot('Position', [0.36 0.15 0.25 0.7])
+            title('Observed Pixel Count')
+            subplot(2,2,2)
             heatmap(col2grid(bg.bg),'ColorLimits',[min_avg max_avg])
-            title('Predicted')
-            subplot('Position', [0.67 0.15 0.25 0.7])
+            title('Predicted Pixel Count')
+            subplot(2,2,3)
+            heatmap(col2grid(bg.fitness),'ColorLimits',[0.7 1.4])
+            title('Fitness')
+            subplot(2,2,4)
             heatmap(col2grid(rmse(:,iii)),'ColorLimits',[0 120])
-            title('POS-wise RMSE')
+            title('RMSE')
             colormap parula
         end
 
 %%  POWER, FALSE POSITIVE AND ES
 
+%         connectSQL;
         cont_data = fetch(conn, sprintf(['select * from %s ',...
             'where orf_name = ''%s'' ',...
             'and fitness is not NULL'],tablename_fit,cont.name));
@@ -348,22 +352,21 @@
         for i=1:100000
             rest_dist(i,:) = datasample(rest_data.fitness, 8, 'Replace', false);
             rest_means(i,:) = mean(rest_dist(i,:));
-            rest_std(i,:) = std(rest_dist(i,:));
+%             rest_std(i,:) = std(rest_dist(i,:));
         end
     %     ksdensity(rest_means);
 
         contmean = nanmean(cont_means);
         contstd = nanstd(cont_means);
+        restmean = nanmean(rest_means);
+        reststd = nanstd(rest_means);
+        
         m = cont_means;
         tt = length(m);
 
         pvals = [];
         stat = [];
         for i = 1:length(rest_means)
-            [ef_size(i,:), ~] = ...
-                        effect_size(2,contmean,contstd,...
-                        2,rest_means(i),rest_std(i),...
-                        1.96,1.96);
             if sum(m<rest_means(i)) < tt/2
                 if m<rest_means(i) == 0
                     pvals = [pvals; 1/tt];
@@ -378,9 +381,15 @@
             end
         end
 
+        ef_size = abs(mean(cont_data.fitness) - mean(rest_data.fitness))/...
+            (((length(cont_data.fitness)*(std(cont_data.fitness))^2 +...
+            length(rest_data.fitness)*(std(rest_data.fitness))^2)/...
+            (length(cont_data.fitness) +...
+            length(rest_data.fitness) - 2))^(0.5))
+        
         pow = (sum(pvals<0.05)/length(rest_means))*100
         (sum(pvals>0.05)/length(rest_means))*100
-        median(ef_size)
+%         median(ef_size)
 
         figure()
         [f,xi] = ksdensity(cont_means);
@@ -389,8 +398,8 @@
         [f,xi] = ksdensity(rest_means);
         plot(xi,f,'LineWidth',3)
         legend('control','rest of plate')
-        title(sprintf(['ES = %0.2f \n ',...
-            'Power = %0.2f'],median(ef_size),pow))
+        title(sprintf(['ES = %0.3f \n ',...
+            'Power = %0.3f'],ef_size,pow))
         xlabel('Fitness')
         ylabel('Density')
         grid on
