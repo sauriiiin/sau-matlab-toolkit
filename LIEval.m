@@ -179,3 +179,49 @@
     grid on
     hold off
 
+%%  SCHEME EFFECT
+
+    schemedat = fetch(conn, ['select a.fitness, b.fitness ',...
+        'from 4C2_6144_FITNESS a, 4C3_6144_FITNESS b ',...
+        'where a.pos = b.pos and a.fitness is not NULL']);
+    
+    data005 = sum(abs(schemedat.fitness - schemedat.fitness_1) < 0.05)/...
+        length(schemedat.fitness);
+    
+    figure()
+    histogram(abs(schemedat.fitness - schemedat.fitness_1),...
+        'Normalization','pdf')
+    grid on
+    xlabel('Fitness Difference')
+    ylabel('Density')
+    text(0.05,90,sprintf('<0.05 contains %0.2f%% of data',data005*100))
+    hold on
+    line(ones(121)*0.05,0:120)
+    title('Upscale Scheme 1 v/s 2')
+    
+%%  POWER vs ES
+
+    es_pow = [4.397 0.120; 4.898 0.152; 58.628 0.474; 99.012 1.230; 100 2.152];
+    
+    figure()
+    scatter(es_pow(:,2), es_pow(:,1),'MarkerEdgeColor',[0 .5 .5],...
+              'MarkerFaceColor',[0 .7 .7],...
+              'LineWidth',1.5);
+    grid on
+    grid minor
+    xlim([0,2.5])
+    ylim([0,110])
+    xlabel('Effect Size')
+    ylabel('Power')
+    title('Power V/S ES')
+%     hold on
+%     fit = polyfit(es_pow(:,2), es_pow(:,1),2); 
+%     plot(0:0.01:2.5, polyval(fit,0:0.01:2.5))
+%     hold off
+    
+    
+    
+    
+    
+    
+    
