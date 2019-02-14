@@ -130,10 +130,10 @@
 %     p2c_info = char(inputdlg(prompt,...
 %         name,1,defaultanswers));
     
-    p2c_info(1,:) = 'PT2_pos2coor6144';
-    p2c_info(2,:) = '6144plate       ';
-    p2c_info(3,:) = '6144col         ';
-    p2c_info(4,:) = '6144row         ';
+    p2c_info(1,:) = 'VP_pos2coor6144';
+    p2c_info(2,:) = '6144plate      ';
+    p2c_info(3,:) = '6144col        ';
+    p2c_info(4,:) = '6144row        ';
 
     p2c = fetch(conn, sprintf(['select * from %s a ',...
         'order by a.%s, a.%s, a.%s'],...
@@ -295,6 +295,107 @@
             'where a.pos = b.pos ',...
             'order by a.pos asc)'],tablename_fit,tablename_norm,tablename_p2o));
 
+%%  PLATEWISE RMSE
+
+        for iii = 1:length(n_plates.x6144plate_1)
+            bg = fetch(conn, sprintf(['select a.* ',...
+                'from %s a, %s b ',...
+                'where a.pos = b.pos ',...
+                'and b.%s = %d ',...
+                'order by b.%s, b.%s'],...
+                tablename_fit,p2c_info(1,:),p2c_info(2,:),...
+                iii,p2c_info(3,:),p2c_info(4,:)));
+            for ii = 1:length(bg.average)
+                rmse(ii,iii) = sqrt(mean(((bg.average(ii) - bg.bg(ii)).^2)));
+            end
+
+            max_avg = max(bg.average);
+            min_avg = min(bg.average);
+
+            figure()
+            subplot('Position', [0.05 0.15 0.25 0.7])
+            heatmap(col2grid(bg.average),'ColorLimits',[min_avg max_avg])
+            title('Observed')
+            subplot('Position', [0.36 0.15 0.25 0.7])
+            heatmap(col2grid(bg.bg),'ColorLimits',[min_avg max_avg])
+            title('Predicted')
+            subplot('Position', [0.67 0.15 0.25 0.7])
+            heatmap(col2grid(rmse(:,iii)),'ColorLimits',[0 120])
+            title('POS-wise RMSE')
+            colormap parula
+        end
+
+%%  POWER, FALSE POSITIVE AND ES
+
+        cont_data = fetch(conn, sprintf(['select * from %s ',...
+            'where orf_name = ''%s'' ',...
+            'and fitness is not NULL'],tablename_fit,cont.name));
+
+        rest_data = fetch(conn, sprintf(['select * from %s ',...
+            'where orf_name != ''%s'' ',...
+            'and fitness is not NULL'],tablename_fit,cont.name));
+
+        cont_dist = [];
+        cont_means = [];
+        for i=1:100000
+            cont_dist(i,:) = datasample(cont_data.fitness, 8, 'Replace', false);
+            cont_means(i,:) = mean(cont_dist(i,:));
+        end
+    %     ksdensity(cont_means);
+
+        rest_dist =[];
+        rest_means = [];
+        for i=1:100000
+            rest_dist(i,:) = datasample(rest_data.fitness, 8, 'Replace', false);
+            rest_means(i,:) = mean(rest_dist(i,:));
+            rest_std(i,:) = std(rest_dist(i,:));
+        end
+    %     ksdensity(rest_means);
+
+        contmean = nanmean(cont_means);
+        contstd = nanstd(cont_means);
+        m = cont_means;
+        tt = length(m);
+
+        pvals = [];
+        stat = [];
+        for i = 1:length(rest_means)
+            [ef_size(i,:), ~] = ...
+                        effect_size(2,contmean,contstd,...
+                        2,rest_means(i),rest_std(i),...
+                        1.96,1.96);
+            if sum(m<rest_means(i)) < tt/2
+                if m<rest_means(i) == 0
+                    pvals = [pvals; 1/tt];
+                    stat = [stat; (rest_means(i) - contmean)/contstd];
+                else
+                    pvals = [pvals; ((sum(m<=rest_means(i))+1)/tt)*2];
+                    stat = [stat; (rest_means(i) - contmean)/contstd];
+                end
+            else
+                pvals = [pvals; ((sum(m>=rest_means(i))+1)/tt)*2];
+                stat = [stat; (rest_means(i) - contmean)/contstd];
+            end
+        end
+
+        pow = (sum(pvals<0.05)/length(rest_means))*100
+        (sum(pvals>0.05)/length(rest_means))*100
+        median(ef_size)
+
+        figure()
+        [f,xi] = ksdensity(cont_means);
+        plot(xi,f,'LineWidth',3)
+        hold on
+        [f,xi] = ksdensity(rest_means);
+        plot(xi,f,'LineWidth',3)
+        legend('control','rest of plate')
+        title(sprintf(['ES = %0.2f \n ',...
+            'Power = %0.2f'],median(ef_size),pow))
+        xlabel('Fitness')
+        ylabel('Density')
+        grid on
+        hold off
+        
 %%  FITNESS STATS
 
         clear data
