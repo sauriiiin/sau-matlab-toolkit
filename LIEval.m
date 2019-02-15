@@ -27,7 +27,7 @@
     setdbprefs({'NullStringRead';'NullStringWrite';'NullNumberRead';'NullNumberWrite'},...
                   {'null';'null';'NaN';'NaN'})
 
-    expt_name = '4C3';
+    expt_name = '4C2';
     density = 6144;
     
 %   MySQL Table Details  
@@ -40,7 +40,7 @@
     tablename_pval      = sprintf('%s_%d_PVALUE',expt_name,density);
     tablename_res       = sprintf('%s_%d_RES',expt_name,density);
     
-    tablename_p2o       = 'VP_pos2orf_name2';
+    tablename_p2o       = 'VP_pos2orf_name1';
     tablename_bpos      = 'VP_borderpos';
     
 %   Reference Strain Name
@@ -159,11 +159,14 @@
         end
     end
 
-    ef_size = abs(mean(cont_data.fitness) - mean(rest_data.fitness))/...
-        (((length(cont_data.fitness)*(std(cont_data.fitness))^2 +...
+    s = (((length(cont_data.fitness)*(std(cont_data.fitness))^2 +...
         length(rest_data.fitness)*(std(rest_data.fitness))^2)/...
         (length(cont_data.fitness) +...
-        length(rest_data.fitness) - 2))^(0.5))
+        length(rest_data.fitness) - 2))^(0.5));
+    
+    ef_size = abs(mean(cont_data.fitness) - mean(rest_data.fitness))/s
+        
+    N = 2*(1.96 * s/ef_size)^2
 
     pow = (sum(pvals<0.05)/length(rest_means))*100
     (sum(pvals>0.05)/length(rest_means))*100
@@ -182,7 +185,85 @@
     ylabel('Density')
     grid on
     hold off
+    
+%%  CONTROL DISTRIBUTION
+%   The fitness distribution of the positions used to create the LI model
+    
+    m = cont_means;
+    tt = length(m);
 
+    contp = [];
+    for i = 1:10000
+        temp = mean(datasample(cont_data.fitness, 8, 'Replace', false));
+        if sum(m<temp) < tt/2
+            if m<temp == 0
+                contp = [contp; 1/tt];
+            else
+                contp = [contp; ((sum(m<=temp)+1)/tt)*2];
+            end
+        else
+            contp = [contp; ((sum(m>=temp)+1)/tt)*2];
+        end
+    end
+    
+    figure()
+    histogram(contp)
+    
+%     p = 0:0.01:1;
+%     len = length(contp);
+%     
+%     fpdat = [];
+%     
+%     for i = 1:length(p)
+%         fp = sum(contp <= p(i));
+%         fpdat = [fpdat; [p(i), fp/len]];
+%     end
+%     
+%     figure()
+%     histogram(contp, 'Normalization', 'cdf')
+%     hold on
+%     plot(0:0.01:1,0:0.01:1,'--r','LineWidth',3)
+%     grid on
+%     xlabel('p value cut-offs')
+%     ylabel('proportion of controls')
+%     xlim([0,1])
+%     ylim([0,1])
+%     
+
+%%  DATA UNDER PVAL CUT-OFFS
+    
+    p = 0:0.01:1;
+    len = length(pvals);
+    
+    fpdat = [];
+    
+    for i = 1:length(p)
+        fp = sum(pvals <= p(i));
+        fpdat = [fpdat; [p(i), fp/len]];
+    end
+        
+%     figure()
+%     plot(fpdat(:,1), fpdat(:,2))  
+%     grid on
+%     xlabel('p-value')
+%     ylabel('false positive rate')
+%     title('LI FPR in Expt')
+%     xlim([0,0.1])
+%     ylim([0,0.1])
+    
+    figure()
+    histogram(pvals, 'Normalization', 'cdf')
+    hold on
+    plot(0:0.01:1,0:0.01:1,'--r','LineWidth',3)
+    grid on
+    xlabel('p value cut-offs')
+    ylabel('proportion of colonies')
+    xlim([0,1])
+    ylim([0,1])
+    
+%     figure()
+%     cdfplot(rest_data.average)
+    
 %%  SCHEME EFFECT
 
     schemedat = fetch(conn, ['select a.fitness, b.fitness ',...
@@ -224,8 +305,56 @@
 %     hold off
     
     
+%%  MIN REFERENCE
+%   On rest of the plate
     
+    N = 2*(1.96 * s/ef_size)^2
+
+    minref_p = [];
     
-    
-    
-    
+    for ii = 1:10
+        samp_dist =[];
+        samp_means = [];
+        for i=1:10
+            samp_dist(i,:) = datasample(rest_data.fitness, 8, 'Replace', false);
+            samp_means(i,:) = mean(samp_dist(i,:));
+    %             samp_std(i,:) = std(samp_dist(i,:));
+        end
+    %     ksdensity(samp_means);
+
+        sampmean = nanmean(samp_means);
+        sampstd = nanstd(samp_means);
+
+        m = cont_means;
+        tt = length(m);
+
+        pvals = [];
+        stat = [];
+        for i = 1:length(samp_means)
+            if sum(m<samp_means(i)) < tt/2
+                if m<samp_means(i) == 0
+                    pvals = [pvals; 1/tt];
+                    stat = [stat; (samp_means(i) - contmean)/contstd];
+                else
+                    pvals = [pvals; ((sum(m<=samp_means(i))+1)/tt)*2];
+                    stat = [stat; (samp_means(i) - contmean)/contstd];
+                end
+            else
+                pvals = [pvals; ((sum(m>=samp_means(i))+1)/tt)*2];
+                stat = [stat; (samp_means(i) - contmean)/contstd];
+            end
+        end
+
+    %     s = (((length(cont_data.fitness)*(std(cont_data.fitness))^2 +...
+    %         length(samp_data.fitness)*(std(samp_data.fitness))^2)/...
+    %         (length(cont_data.fitness) +...
+    %         length(samp_data.fitness) - 2))^(0.5));
+    %     
+    %     ef_size = abs(mean(cont_data.fitness) - mean(samp_data.fitness))/s
+
+        minref_p(ii) = (sum(pvals<0.05)/length(samp_means))*100;
+    end
+  
+    mean(minref_p)
+ 
+
