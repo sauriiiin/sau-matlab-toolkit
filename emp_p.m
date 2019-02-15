@@ -47,7 +47,7 @@
                         stat = [stat; (orffit.cs_mean(i) - contmean)/contstd];
                     end
                 else
-                    pvals = [pvals; (sum(m>=orffit.cs_mean(i))+1)/tt];
+                    pvals = [pvals; (sum(m>=orffit.cs_mean(i)))/tt];
                     stat = [stat; (orffit.cs_mean(i) - contmean)/contstd];
                 end
             end

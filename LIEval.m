@@ -154,7 +154,7 @@
                 stat = [stat; (rest_means(i) - contmean)/contstd];
             end
         else
-            pvals = [pvals; ((sum(m>=rest_means(i))+1)/tt)*2];
+            pvals = [pvals; ((sum(m>=rest_means(i)))/tt)*2];
             stat = [stat; (rest_means(i) - contmean)/contstd];
         end
     end
@@ -186,15 +186,15 @@
     grid on
     hold off
     
-%%  CONTROL DISTRIBUTION
+%%  NULL DISTRIBUTION
 %   The fitness distribution of the positions used to create the LI model
     
-    m = cont_means;
+    m = cont_data.fitness;
     tt = length(m);
 
     contp = [];
     for i = 1:10000
-        temp = mean(datasample(cont_data.fitness, 8, 'Replace', false));
+        temp = mean(datasample(cont_data.fitness, 1, 'Replace', false));
         if sum(m<temp) < tt/2
             if m<temp == 0
                 contp = [contp; 1/tt];
@@ -202,33 +202,16 @@
                 contp = [contp; ((sum(m<=temp)+1)/tt)*2];
             end
         else
-            contp = [contp; ((sum(m>=temp)+1)/tt)*2];
+            contp = [contp; ((sum(m>=temp))/tt)*2];
         end
     end
     
     figure()
     histogram(contp)
-    
-%     p = 0:0.01:1;
-%     len = length(contp);
-%     
-%     fpdat = [];
-%     
-%     for i = 1:length(p)
-%         fp = sum(contp <= p(i));
-%         fpdat = [fpdat; [p(i), fp/len]];
-%     end
-%     
-%     figure()
-%     histogram(contp, 'Normalization', 'cdf')
-%     hold on
-%     plot(0:0.01:1,0:0.01:1,'--r','LineWidth',3)
-%     grid on
-%     xlabel('p value cut-offs')
-%     ylabel('proportion of controls')
-%     xlim([0,1])
-%     ylim([0,1])
-%     
+    grid on
+    xlabel('P Values')
+    ylabel('Frequency')
+    title('NULL DISTRIBUTION')
 
 %%  DATA UNDER PVAL CUT-OFFS
     
