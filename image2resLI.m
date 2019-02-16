@@ -388,7 +388,7 @@
                         pvals = [pvals; 1/tt];
                         stat = [stat; (orffit.cs_mean(i) - contmean)/contstd];
                     else
-                        pvals = [pvals; ((sum(m<=orffit.cs_mean(i))+1)/tt)*2];
+                        pvals = [pvals; ((sum(m<=orffit.cs_mean(i)))/tt)*2];
                         stat = [stat; (orffit.cs_mean(i) - contmean)/contstd];
                     end
                 else

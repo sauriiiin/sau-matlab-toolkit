@@ -150,7 +150,7 @@
                 pvals = [pvals; 1/tt];
                 stat = [stat; (rest_means(i) - contmean)/contstd];
             else
-                pvals = [pvals; ((sum(m<=rest_means(i))+1)/tt)*2];
+                pvals = [pvals; ((sum(m<=rest_means(i)))/tt)*2];
                 stat = [stat; (rest_means(i) - contmean)/contstd];
             end
         else
@@ -199,7 +199,7 @@
             if m<temp == 0
                 contp = [contp; 1/tt];
             else
-                contp = [contp; ((sum(m<=temp)+1)/tt)*2];
+                contp = [contp; ((sum(m<=temp))/tt)*2];
             end
         else
             contp = [contp; ((sum(m>=temp))/tt)*2];
@@ -207,10 +207,10 @@
     end
     
     figure()
-    histogram(contp)
+    histogram(contp, 'Normalization', 'pdf')
     grid on
     xlabel('P Values')
-    ylabel('Frequency')
+    ylabel('Probability Density')
     title('NULL DISTRIBUTION')
 
 %%  DATA UNDER PVAL CUT-OFFS
@@ -291,53 +291,99 @@
 %%  MIN REFERENCE
 %   On rest of the plate
     
-    N = 2*(1.96 * s/ef_size)^2
+%     N = 2*(1.96 * s/ef_size)^2
+% 
+%     minref_p = [];
+%     
+%     for ii = 1:10
+%         samp_dist =[];
+%         samp_means = [];
+%         for i=1:10
+%             samp_dist(i,:) = datasample(rest_data.fitness, 8, 'Replace', false);
+%             samp_means(i,:) = mean(samp_dist(i,:));
+%     %             samp_std(i,:) = std(samp_dist(i,:));
+%         end
+%     %     ksdensity(samp_means);
+% 
+%         sampmean = nanmean(samp_means);
+%         sampstd = nanstd(samp_means);
+% 
+%         m = cont_means;
+%         tt = length(m);
+% 
+%         pvals = [];
+%         stat = [];
+%         for i = 1:length(samp_means)
+%             if sum(m<samp_means(i)) < tt/2
+%                 if m<samp_means(i) == 0
+%                     pvals = [pvals; 1/tt];
+%                     stat = [stat; (samp_means(i) - contmean)/contstd];
+%                 else
+%                     pvals = [pvals; ((sum(m<=samp_means(i))+1)/tt)*2];
+%                     stat = [stat; (samp_means(i) - contmean)/contstd];
+%                 end
+%             else
+%                 pvals = [pvals; ((sum(m>=samp_means(i))+1)/tt)*2];
+%                 stat = [stat; (samp_means(i) - contmean)/contstd];
+%             end
+%         end
+% 
+%     %     s = (((length(cont_data.fitness)*(std(cont_data.fitness))^2 +...
+%     %         length(samp_data.fitness)*(std(samp_data.fitness))^2)/...
+%     %         (length(cont_data.fitness) +...
+%     %         length(samp_data.fitness) - 2))^(0.5));
+%     %     
+%     %     ef_size = abs(mean(cont_data.fitness) - mean(samp_data.fitness))/s
+% 
+%         minref_p(ii) = (sum(pvals<0.05)/length(samp_means))*100;
+%     end
+%   
+%     mean(minref_p)
+%  
 
-    minref_p = [];
+%%  MISSING DATA WHEN CALCULATING BG
+
+%   Random data missing all over the plate
+
+    miss_data = fetch(conn, sprintf(['select * from %s a, %s b ',...
+        'where a.pos = b.pos and orf_name = ''%s'' ',...
+        'order by %s, %s, %s'], tablename_fit, p2c_info(1,:),...
+        cont.name,...
+        p2c_info(2,:), p2c_info(3,:), p2c_info(4,:)));
     
-    for ii = 1:10
-        samp_dist =[];
-        samp_means = [];
-        for i=1:10
-            samp_dist(i,:) = datasample(rest_data.fitness, 8, 'Replace', false);
-            samp_means(i,:) = mean(samp_dist(i,:));
-    %             samp_std(i,:) = std(samp_dist(i,:));
-        end
-    %     ksdensity(samp_means);
+    pos = datasample(cont_data.pos(1:length(cont_data.pos)/2),320)';
+    pos = [pos, pos + 6144];
 
-        sampmean = nanmean(samp_means);
-        sampstd = nanstd(samp_means);
+    a = contBG(miss_data.average(1:1536).*~ismember(miss_data.pos(1:1536), pos));
+    b = col2grid(miss_data.average(1:1536))./a;
+    c = contBG(miss_data.average(1537:1536*2).*~ismember(miss_data.pos(1537:1536*2), pos));
+    d = col2grid(miss_data.average(1537:1536*2))./c;
 
-        m = cont_means;
-        tt = length(m);
+    e = [grid2row(b), grid2row(d)];
+    e = e(~isnan(e));
 
-        pvals = [];
-        stat = [];
-        for i = 1:length(samp_means)
-            if sum(m<samp_means(i)) < tt/2
-                if m<samp_means(i) == 0
-                    pvals = [pvals; 1/tt];
-                    stat = [stat; (samp_means(i) - contmean)/contstd];
-                else
-                    pvals = [pvals; ((sum(m<=samp_means(i))+1)/tt)*2];
-                    stat = [stat; (samp_means(i) - contmean)/contstd];
-                end
+    m = e;
+    tt = length(e);
+    contp = [];
+
+    for ii = 1:10000
+        temp = mean(datasample(e, 1, 'Replace', false));
+        if sum(m<temp) < tt/2
+            if m<temp == 0
+                contp = [contp; 1/tt];
             else
-                pvals = [pvals; ((sum(m>=samp_means(i))+1)/tt)*2];
-                stat = [stat; (samp_means(i) - contmean)/contstd];
+                contp = [contp; ((sum(m<=temp))/tt)*2];
             end
+        else
+            contp = [contp; ((sum(m>=temp))/tt)*2];
         end
-
-    %     s = (((length(cont_data.fitness)*(std(cont_data.fitness))^2 +...
-    %         length(samp_data.fitness)*(std(samp_data.fitness))^2)/...
-    %         (length(cont_data.fitness) +...
-    %         length(samp_data.fitness) - 2))^(0.5));
-    %     
-    %     ef_size = abs(mean(cont_data.fitness) - mean(samp_data.fitness))/s
-
-        minref_p(ii) = (sum(pvals<0.05)/length(samp_means))*100;
     end
-  
-    mean(minref_p)
- 
+    
+    figure()
+    histogram(contp, 'Normalization', 'pdf')
+    grid on
+    xlabel('P Values')
+    ylabel('Probability Density')
+    title('NULL DISTRIBUTION')
 
+%   Smudge type of missing
