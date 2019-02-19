@@ -509,7 +509,7 @@
         ef_size = abs(mean(cont_fit) - mean(rest_fit))/s;
         N = 2*(1.96 * s/ef_size)^2;
         pow = (sum(temp_p<0.05)/length(rest_means))*100;
-        avg_diff = abs(nanmean(nanmean(cont_avg)) - nanmean(nanmean(restmean)));
+        avg_diff = abs(nanmean(nanmean(cont_avg)) - nanmean(nanmean(rest_avg)));
         
         data = [data; ef_size, pow, avg_diff];
 
