@@ -537,16 +537,16 @@
     
 %%  POWER vs ES
 
-    es_pow = [100.000 4.004; 100.000 3.118; 100.000 2.622; 99.927 1.915;...
-        99.190 1.634; 77.760 1.081; 37.984 0.661; 2.520 0.147; 2.254 0.008];
+    [~, i] = sort(data(:,1));
+    es_pow = data(i, :);
     
-    x = es_pow(:,2);
-    y = es_pow(:,1);
-    xx = 0:.001:100;
-    yy = spline(x,y,xx);
+    x   = es_pow(:,1);
+    y   = es_pow(:,2);
+    xx  = 0:.001:100;
+    yy  = spline(x,y,xx);
     
-%     figure()
-    fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
+    figure()
+%     fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
     plot(x,y,'o',xx,yy,'LineWidth',2)
     hold on
     scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
@@ -559,6 +559,15 @@
     xlabel('Effect Size')
     ylabel('Power')
     title('Power V/S ES')
+%     hold on
+%     yyaxis right
+%     scatter(x, es_pow(:,3))
     hold off
-    saveas(fig,sprintf('vp_powes_%d.png',18))  
+%     saveas(fig,sprintf('vp_powes_%d.png',18)) 
     
+
+%%  POWER vs ES in context of  No. of Replicates
+
+    
+
+
