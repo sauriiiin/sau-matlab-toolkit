@@ -93,7 +93,8 @@
             max_avg = max(bg.average);
             min_avg = min(bg.average);
 
-            fig = figure('Renderer', 'painters', 'Position', [10 10 1920 1200],'visible','off');
+%             fig = figure('Renderer', 'painters', 'Position', [10 10 1920 1200],'visible','off');
+            figure()
             subplot(2,2,1)
             heatmap(col2grid(bg.average),'ColorLimits',[min_avg max_avg]);
 %             title(sprintf('Observed Pixel Count\n(Plate %d, %d hr)',iii,hours(i)))
@@ -109,91 +110,99 @@
             heatmap(col2grid(rmse(:,iii)),'ColorLimits',[0 120]);
             title(sprintf('RMSE (%0.3f)',mean(nanmean(rmse))))
             colormap parula
-            saveas(fig,sprintf('overview%d_%d.png',iii,hours(i)))
+%             saveas(fig,sprintf('overview%d_%d.png',iii,hours(i)))
         end
     end
 
 %%  POWER, FALSE POSITIVE AND ES
 
-%         connectSQL;
-    cont_data = fetch(conn, sprintf(['select * from %s ',...
-        'where orf_name = ''%s'' ',...
-        'and fitness is not NULL and hours = %d'],...
-        tablename_fit,cont.name,hours));
-
-    rest_data = fetch(conn, sprintf(['select * from %s ',...
-        'where orf_name != ''%s'' ',...
-        'and fitness is not NULL and hours = %d'],...
-        tablename_fit,cont.name,hours));
-
-    cont_dist = [];
-    cont_means = [];
-    for i=1:100000
-        cont_dist(i,:) = datasample(cont_data.fitness, 8, 'Replace', false);
-        cont_means(i,:) = mean(cont_dist(i,:));
-    end
-%     ksdensity(cont_means);
-
-    rest_dist =[];
-    rest_means = [];
-    for i=1:100000
-        rest_dist(i,:) = datasample(rest_data.fitness, 8, 'Replace', false);
-        rest_means(i,:) = mean(rest_dist(i,:));
-%             rest_std(i,:) = std(rest_dist(i,:));
-    end
-%     ksdensity(rest_means);
-
-    contmean = nanmean(cont_means);
-    contstd = nanstd(cont_means);
-    restmean = nanmean(rest_means);
-    reststd = nanstd(rest_means);
-
-    m = cont_means;
-    tt = length(m);
-
-    pvals = [];
-    stat = [];
-    for i = 1:length(rest_means)
-        if sum(m<rest_means(i)) < tt/2
-            if m<rest_means(i) == 0
-                pvals = [pvals; 1/tt];
-                stat = [stat; (rest_means(i) - contmean)/contstd];
-            else
-                pvals = [pvals; ((sum(m<=rest_means(i)))/tt)*2];
-                stat = [stat; (rest_means(i) - contmean)/contstd];
-            end
-        else
-            pvals = [pvals; ((sum(m>=rest_means(i)))/tt)*2];
-            stat = [stat; (rest_means(i) - contmean)/contstd];
+    for ii=1:length(hours)
+        if conn.isopen == 0
+            connectSQL;
         end
-    end
+        cont_data = fetch(conn, sprintf(['select * from %s ',...
+            'where orf_name = ''%s'' ',...
+            'and fitness is not NULL and hours = %d'],...
+            tablename_fit,cont.name,hours(ii)));
 
-    s = (((length(cont_data.fitness)*(std(cont_data.fitness))^2 +...
-        length(rest_data.fitness)*(std(rest_data.fitness))^2)/...
-        (length(cont_data.fitness) +...
-        length(rest_data.fitness) - 2))^(0.5));
-    
-    ef_size = abs(mean(cont_data.fitness) - mean(rest_data.fitness))/s
+        rest_data = fetch(conn, sprintf(['select * from %s ',...
+            'where orf_name != ''%s'' ',...
+            'and fitness is not NULL and hours = %d'],...
+            tablename_fit,cont.name,hours(ii)));
+
+        cont_dist = [];
+        cont_means = [];
+        for i=1:100000
+            cont_dist(i,:) = datasample(cont_data.fitness, 8, 'Replace', false);
+            cont_means(i,:) = mean(cont_dist(i,:));
+        end
+    %     ksdensity(cont_means);
+
+        rest_dist =[];
+        rest_means = [];
+        for i=1:100000
+            rest_dist(i,:) = datasample(rest_data.fitness, 8, 'Replace', false);
+            rest_means(i,:) = mean(rest_dist(i,:));
+    %             rest_std(i,:) = std(rest_dist(i,:));
+        end
+    %     ksdensity(rest_means);
+
+        contmean = nanmean(cont_means);
+        contstd = nanstd(cont_means);
+        restmean = nanmean(rest_means);
+        reststd = nanstd(rest_means);
+
+        m = cont_means;
+        tt = length(m);
+
+        temp_p = [];
+        temp_s = [];
+        for i = 1:length(rest_means)
+            if sum(m<rest_means(i)) < tt/2
+                if m<rest_means(i) == 0
+                    temp_p = [temp_p; 1/tt];
+                    temp_s = [temp_s; (rest_means(i) - contmean)/contstd];
+                else
+                    temp_p = [temp_p; ((sum(m<=rest_means(i)))/tt)*2];
+                    temp_s = [temp_s; (rest_means(i) - contmean)/contstd];
+                end
+            else
+                temp_p = [temp_p; ((sum(m>=rest_means(i)))/tt)*2];
+                temp_s = [temp_s; (rest_means(i) - contmean)/contstd];
+            end
+        end
+
+        pvals{ii} = temp_p; stat{ii} = temp_s;
         
-    N = 2*(1.96 * s/ef_size)^2
+        s = (((length(cont_data.fitness)*(std(cont_data.fitness))^2 +...
+            length(rest_data.fitness)*(std(rest_data.fitness))^2)/...
+            (length(cont_data.fitness) +...
+            length(rest_data.fitness) - 2))^(0.5));
 
-    pow = (sum(pvals<0.05)/length(rest_means))*100
-    (sum(pvals>0.05)/length(rest_means))*100
-%         median(ef_size)
+        ef_size = abs(mean(cont_data.fitness) - mean(rest_data.fitness))/s;
+        N = 2*(1.96 * s/ef_size)^2;
 
-    figure()
-    [f,xi] = ksdensity(cont_means);
-    plot(xi,f,'LineWidth',3)
-    hold on
-    [f,xi] = ksdensity(rest_means);
-    plot(xi,f,'LineWidth',3)
-    legend('control','rest of plate')
-    title(sprintf(['ES = %0.3f \n ',...
-        'Power = %0.3f'],ef_size,pow))
-    xlabel('Fitness')
-    ylabel('Density')
-    grid on
-    hold off
+        pow = (sum(temp_p<0.05)/length(rest_means))*100;
+        (sum(temp_p>0.05)/length(rest_means))*100;
+    %         median(ef_size)
+
+%         fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
+%         [f,xi] = ksdensity(cont_means);
+%         plot(xi,f,'LineWidth',3)
+%         hold on
+%         [f,xi] = ksdensity(rest_means);
+%         plot(xi,f,'LineWidth',3)
+%         legend('control','rest of plate')
+%         title(sprintf(['ES = %0.3f \n ',...
+%             'Power = %0.3f'],ef_size,pow))
+%         xlabel('Fitness')
+%         ylabel('Density')
+%         grid on
+%         hold off
+%         saveas(fig,sprintf('powes_%d.png',hours(ii)))
+
+    fprintf('time %d hrs done/n', hours(ii))
+    end
     
 %%  NULL DISTRIBUTION
 %   The fitness distribution of the positions used to create the LI model
@@ -226,33 +235,37 @@
 %%  DATA UNDER PVAL CUT-OFFS
     
     p = 0:0.01:1;
-    len = length(pvals);
     
-    fpdat = [];
-    
-    for i = 1:length(p)
-        fp = sum(pvals <= p(i));
-        fpdat = [fpdat; [p(i), fp/len]];
+    for ii = 1:length(hours)-2
+        len = length(pvals{ii});
+        fpdat = [];
+
+        for i = 1:length(p)
+            fp = sum(pvals{ii} <= p(i));
+            fpdat = [fpdat; [p(i), fp/len]];
+        end
+
+    %     figure()
+    %     plot(fpdat(:,1), fpdat(:,2))  
+    %     grid on
+    %     xlabel('p-value')
+    %     ylabel('false positive rate')
+    %     title('LI FPR in Expt')
+    %     xlim([0,0.1])
+    %     ylim([0,0.1])
+
+        fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
+        histogram(pvals{ii}, 'Normalization', 'cdf')
+        hold on
+        plot(0:0.01:1,0:0.01:1,'--r','LineWidth',3)
+        grid on
+        xlabel('P Value Cut-offs')
+        ylabel('Proportion of Colonies')
+        title(sprintf('Time = %d hrs',hours(ii)))
+        xlim([0,1])
+        ylim([0,1])
+        saveas(fig,sprintf('pval_colonies_%d.png',hours(ii)))
     end
-        
-%     figure()
-%     plot(fpdat(:,1), fpdat(:,2))  
-%     grid on
-%     xlabel('p-value')
-%     ylabel('false positive rate')
-%     title('LI FPR in Expt')
-%     xlim([0,0.1])
-%     ylim([0,0.1])
-    
-    figure()
-    histogram(pvals, 'Normalization', 'cdf')
-    hold on
-    plot(0:0.01:1,0:0.01:1,'--r','LineWidth',3)
-    grid on
-    xlabel('p value cut-offs')
-    ylabel('proportion of colonies')
-    xlim([0,1])
-    ylim([0,1])
     
 %     figure()
 %     cdfplot(rest_data.average)
