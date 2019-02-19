@@ -393,8 +393,9 @@
 
 %%  VIRTUAL PLATE POWER ANALYSIS
  
-    cont_hrs = 20;
-    rest_hrs = [15 16 17 18 19 20 21 24 25 26 27];
+    cont_hrs = 18;
+    rest_hrs = [14 15 16 17 18 19 20 21 24 25];
+    data = [];
     
     for ii = 1:length(rest_hrs)
         plate_fit = [];
@@ -507,31 +508,31 @@
 
         ef_size = abs(mean(cont_fit) - mean(rest_fit))/s;
         N = 2*(1.96 * s/ef_size)^2;
-
         pow = (sum(temp_p<0.05)/length(rest_means))*100;
-        (sum(temp_p>0.05)/length(rest_means))*100;
-    %         median(ef_size)
+        avg_diff = abs(nanmean(nanmean(cont_avg)) - nanmean(nanmean(restmean)));
+        
+        data = [data; ef_size, pow, avg_diff];
 
 %         figure()
-        fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
-        [f,xi] = ksdensity(cont_means);
-        plot(xi,f,'LineWidth',3)
-        xlim([0.75,1.25])
-        ylim([0,30])
-        hold on
-        [f,xi] = ksdensity(rest_means);
-        plot(xi,f,'LineWidth',3)
-        legend('control','rest of plate')
-        title(sprintf(['TimeC = %d hrs | TimeR = %d hrs \n ',...
-            'ES = %0.3f | Power = %0.3f'],...
-            cont_hrs,rest_hrs(ii),ef_size,pow))
-        xlabel('Fitness')
-        ylabel('Density')
-        grid on
-        grid minor
-        hold off
-        saveas(fig,sprintf('vp_powes_%d_%d.png',cont_hrs,rest_hrs(ii)))
-    
+%         fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
+%         [f,xi] = ksdensity(cont_means);
+%         plot(xi,f,'LineWidth',3)
+%         xlim([0.75,1.25])
+%         ylim([0,30])
+%         hold on
+%         [f,xi] = ksdensity(rest_means);
+%         plot(xi,f,'LineWidth',3)
+%         legend('control','rest of plate')
+%         title(sprintf(['TimeC = %d hrs | TimeR = %d hrs \n ',...
+%             'ES = %0.3f | Power = %0.3f'],...
+%             cont_hrs,rest_hrs(ii),ef_size,pow))
+%         xlabel('Fitness')
+%         ylabel('Density')
+%         grid on
+%         grid minor
+%         hold off
+%         saveas(fig,sprintf('vp_powes_%d_%d.png',cont_hrs,rest_hrs(ii)))
+    fprintf('Virtual plate %d hrs V/S %d hrs done!\n', cont_hrs,rest_hrs(ii))
     end
     
 %%  POWER vs ES
@@ -544,19 +545,20 @@
     xx = 0:.001:100;
     yy = spline(x,y,xx);
     
-    figure()
+%     figure()
+    fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
+    plot(x,y,'o',xx,yy,'LineWidth',2)
+    hold on
     scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
               'MarkerFaceColor',[0 .7 .7],...
-              'LineWidth',1.5);
-    hold on
-    plot(x,y,'o',xx,yy)
+              'LineWidth',2);
     grid on
     grid minor
-%     xlim([0,2.5])
+    xlim([0,3])
     ylim([0,101])
     xlabel('Effect Size')
     ylabel('Power')
     title('Power V/S ES')
     hold off
-        
+    saveas(fig,sprintf('vp_powes_%d.png',18))  
     
