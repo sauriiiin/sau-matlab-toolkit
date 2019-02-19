@@ -418,6 +418,8 @@
     rest_hrs = 11;
     
     plate_fit = [];
+    cont_fit = [];
+    rest_fit = [];
 
     for iii = 1:length(n_plates.x6144plate_1)
         pos.all = fetch(conn, sprintf(['select a.pos ',...
@@ -469,24 +471,30 @@
 
         plate_fit = plate_avg./plate_bg;
         
+        cont_fit_tmp = plate_fit.*cont_pos;
+        cont_fit_tmp = cont_fit_tmp(cont_fit_tmp > 0);
+        cont_fit = [cont_fit; cont_fit_tmp];
+        
+        rest_fit_tmp = plate_fit.*rest_pos;
+        rest_fit_tmp = rest_fit_tmp(rest_fit_tmp>0); 
+        rest_fit = [rest_fit; rest_fit_tmp];
     end
+
+% % % % % % % % % 
 
     cont_dist = [];
     cont_means = [];
     for i=1:100000
-        cont_dist(i,:) = datasample(cont_data.fitness, 8, 'Replace', false);
+        cont_dist(i,:) = datasample(cont_fit, 8, 'Replace', false);
         cont_means(i,:) = mean(cont_dist(i,:));
     end
-%     ksdensity(cont_means);
 
     rest_dist =[];
     rest_means = [];
     for i=1:100000
-        rest_dist(i,:) = datasample(rest_data.fitness, 8, 'Replace', false);
+        rest_dist(i,:) = datasample(rest_fit, 8, 'Replace', false);
         rest_means(i,:) = mean(rest_dist(i,:));
-%             rest_std(i,:) = std(rest_dist(i,:));
     end
-%     ksdensity(rest_means);
 
     contmean = nanmean(cont_means);
     contstd = nanstd(cont_means);
@@ -515,29 +523,30 @@
 
     pvals{ii} = temp_p; stat{ii} = temp_s;
 
-    s = (((length(cont_data.fitness)*(std(cont_data.fitness))^2 +...
-        length(rest_data.fitness)*(std(rest_data.fitness))^2)/...
-        (length(cont_data.fitness) +...
-        length(rest_data.fitness) - 2))^(0.5));
+    s = (((length(cont_fit)*(std(cont_fit))^2 +...
+        length(rest_fit)*(std(rest_fit))^2)/...
+        (length(cont_fit) +...
+        length(rest_fit) - 2))^(0.5));
 
-    ef_size = abs(mean(cont_data.fitness) - mean(rest_data.fitness))/s;
+    ef_size = abs(mean(cont_fit) - mean(rest_fit))/s;
     N = 2*(1.96 * s/ef_size)^2;
 
     pow = (sum(temp_p<0.05)/length(rest_means))*100;
     (sum(temp_p>0.05)/length(rest_means))*100;
 %         median(ef_size)
 
-%         fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
-%         [f,xi] = ksdensity(cont_means);
-%         plot(xi,f,'LineWidth',3)
-%         hold on
-%         [f,xi] = ksdensity(rest_means);
-%         plot(xi,f,'LineWidth',3)
-%         legend('control','rest of plate')
-%         title(sprintf(['ES = %0.3f \n ',...
-%             'Power = %0.3f'],ef_size,pow))
-%         xlabel('Fitness')
-%         ylabel('Density')
-%         grid on
-%         hold off
+    figure()
+%       fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
+    [f,xi] = ksdensity(cont_means);
+    plot(xi,f,'LineWidth',3)
+    hold on
+    [f,xi] = ksdensity(rest_means);
+    plot(xi,f,'LineWidth',3)
+    legend('control','rest of plate')
+    title(sprintf(['ES = %0.3f \n ',...
+        'Power = %0.3f'],ef_size,pow))
+    xlabel('Fitness')
+    ylabel('Density')
+    grid on
+    hold off
 %         saveas(fig,sprintf('powes_%d.png',hours(ii)))
