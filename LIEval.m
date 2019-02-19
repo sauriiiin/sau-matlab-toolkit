@@ -201,7 +201,7 @@
 %         hold off
 %         saveas(fig,sprintf('powes_%d.png',hours(ii)))
 
-    fprintf('time %d hrs done/n', hours(ii))
+    fprintf('time %d hrs done\n', hours(ii))
     end
     
 %%  NULL DISTRIBUTION
@@ -410,3 +410,134 @@
     title('NULL DISTRIBUTION')
 
 %   Smudge type of missing
+
+%%  VIRTUAL PLATE POWER ANALYSIS
+
+    
+    cont_hrs = 15;
+    rest_hrs = 11;
+    
+    plate_fit = [];
+
+    for iii = 1:length(n_plates.x6144plate_1)
+        pos.all = fetch(conn, sprintf(['select a.pos ',...
+            'from %s a ',...
+            'where %s = %d ',...
+            'order by %s, %s'],...
+            p2c_info(1,:),...
+            p2c_info(2,:),...
+            n_plates.x6144plate_1(iii),...
+            p2c_info(3,:),...
+            p2c_info(4,:)));
+
+        pos.cont = fetch(conn, sprintf(['select a.pos ',...
+            'from %s a, %s b ',...
+            'where a.pos = b.pos and %s = %d and a.orf_name = ''%s'' ',...
+            'order by %s, %s'],...
+            tablename_p2o,...
+            p2c_info(1,:),...
+            p2c_info(2,:),...
+            n_plates.x6144plate_1(iii),...
+            cont.name,...
+            p2c_info(3,:),...
+            p2c_info(4,:)));
+
+        cont_pos = col2grid(ismember(pos.all.pos, pos.cont.pos));
+        rest_pos = ~cont_pos;
+
+        cont_data = fetch(conn, sprintf(['select a.* ',...
+            'from %s a, %s b ',...
+            'where a.hours = %d ',...
+            'and a.pos = b.pos and b.%s = %d ',...
+            'order by b.%s, b.%s'],...
+            tablename_fit,p2c_info(1,:),cont_hrs,...
+            p2c_info(2,:),1,p2c_info(3,:),p2c_info(4,:)));
+
+        cont_avg = col2grid(cont_data.average).*cont_pos;
+        plate_bg = col2grid(cont_data.bg);
+
+        rest_data = fetch(conn, sprintf(['select a.* ',...
+            'from %s a, %s b ',...
+            'where a.hours = %d ',...
+            'and a.pos = b.pos and b.%s = %d ',...
+            'order by b.%s, b.%s'],...
+            tablename_fit,p2c_info(1,:),rest_hrs,...
+            p2c_info(2,:),1,p2c_info(3,:),p2c_info(4,:)));
+
+        rest_avg = col2grid(rest_data.average).*rest_pos;
+        plate_avg = cont_avg + rest_avg;
+
+        plate_fit = plate_avg./plate_bg;
+        
+    end
+
+    cont_dist = [];
+    cont_means = [];
+    for i=1:100000
+        cont_dist(i,:) = datasample(cont_data.fitness, 8, 'Replace', false);
+        cont_means(i,:) = mean(cont_dist(i,:));
+    end
+%     ksdensity(cont_means);
+
+    rest_dist =[];
+    rest_means = [];
+    for i=1:100000
+        rest_dist(i,:) = datasample(rest_data.fitness, 8, 'Replace', false);
+        rest_means(i,:) = mean(rest_dist(i,:));
+%             rest_std(i,:) = std(rest_dist(i,:));
+    end
+%     ksdensity(rest_means);
+
+    contmean = nanmean(cont_means);
+    contstd = nanstd(cont_means);
+    restmean = nanmean(rest_means);
+    reststd = nanstd(rest_means);
+
+    m = cont_means;
+    tt = length(m);
+
+    temp_p = [];
+    temp_s = [];
+    for i = 1:length(rest_means)
+        if sum(m<rest_means(i)) < tt/2
+            if m<rest_means(i) == 0
+                temp_p = [temp_p; 1/tt];
+                temp_s = [temp_s; (rest_means(i) - contmean)/contstd];
+            else
+                temp_p = [temp_p; ((sum(m<=rest_means(i)))/tt)*2];
+                temp_s = [temp_s; (rest_means(i) - contmean)/contstd];
+            end
+        else
+            temp_p = [temp_p; ((sum(m>=rest_means(i)))/tt)*2];
+            temp_s = [temp_s; (rest_means(i) - contmean)/contstd];
+        end
+    end
+
+    pvals{ii} = temp_p; stat{ii} = temp_s;
+
+    s = (((length(cont_data.fitness)*(std(cont_data.fitness))^2 +...
+        length(rest_data.fitness)*(std(rest_data.fitness))^2)/...
+        (length(cont_data.fitness) +...
+        length(rest_data.fitness) - 2))^(0.5));
+
+    ef_size = abs(mean(cont_data.fitness) - mean(rest_data.fitness))/s;
+    N = 2*(1.96 * s/ef_size)^2;
+
+    pow = (sum(temp_p<0.05)/length(rest_means))*100;
+    (sum(temp_p>0.05)/length(rest_means))*100;
+%         median(ef_size)
+
+%         fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
+%         [f,xi] = ksdensity(cont_means);
+%         plot(xi,f,'LineWidth',3)
+%         hold on
+%         [f,xi] = ksdensity(rest_means);
+%         plot(xi,f,'LineWidth',3)
+%         legend('control','rest of plate')
+%         title(sprintf(['ES = %0.3f \n ',...
+%             'Power = %0.3f'],ef_size,pow))
+%         xlabel('Fitness')
+%         ylabel('Density')
+%         grid on
+%         hold off
+%         saveas(fig,sprintf('powes_%d.png',hours(ii)))
