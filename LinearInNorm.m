@@ -15,9 +15,8 @@
     
         connectSQL;
         
-        temp = [];
         for ii = 1:length(hours)
-            
+            temp = [];
             for iii = 1:length(n_plates.x6144plate_1)
 
                 pos.all = fetch(conn, sprintf(['select a.pos ',...

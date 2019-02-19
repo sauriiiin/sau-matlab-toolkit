@@ -178,10 +178,10 @@
         'Border Positions',1,...
         {'expt_borderpos'}));
     
-%     prompt={'Enter the Smudge Box Table Name:'};
-%     tablename_sbox = char(inputdlg(prompt,...
-%         'Smudge Box',1,...
-%         {'expt_smudgebox'}));
+    prompt={'Enter the Smudge Box Table Name:'};
+    tablename_sbox = char(inputdlg(prompt,...
+        'Smudge Box',1,...
+        {'expt_smudgebox'}));
     
 %   Fetch Protogenes
 
@@ -206,8 +206,12 @@
         cs_mean = [];
         tmp = cs';
 
-        for ii = 1:3:length(files)
-            cs_mean = [cs_mean, mean(tmp(:,ii:ii+2),2)];
+%         for ii = 1:3:length(files)
+%             cs_mean = [cs_mean, mean(tmp(:,ii:ii+2),2)];
+%         end
+%         
+        for ii = 1:length(files) %single picture/time point
+            cs_mean = [cs_mean, tmp(:,ii)];
         end
 
         cs_mean = cs_mean';
@@ -216,12 +220,18 @@
 
         master = [];
         tmp = [];
-        i = 1;
-        for ii = 1:3:size(cs,1)
-            tmp = [cs(ii,:); cs(ii+1,:); cs(ii+2,:);...
-                cs_mean(i,:)];
+%         i = 1;
+%         for ii = 1:3:size(cs,1)
+%             tmp = [cs(ii,:); cs(ii+1,:); cs(ii+2,:);...
+%                 cs_mean(i,:)];
+%             master = [master, tmp];
+%             i = i + 1;
+%         end
+
+        for ii = 1:size(cs,1)
+            tmp = [cs(ii,:); cs(ii,:); cs(ii,:);...
+                cs_mean(ii,:)];
             master = [master, tmp];
-            i = i + 1;
         end
         master = master';
 
@@ -260,10 +270,10 @@
             'set average = NULL ',...
             'where average <= 10'],tablename_jpeg));
         
-%         exec(conn, sprintf(['update %s ',...
-%             'set average = NULL ',...
-%             'where pos in ',...
-%             '(select pos from %s)'],tablename_jpeg,tablename_sbox));
+        exec(conn, sprintf(['update %s ',...
+            'set average = NULL ',...
+            'where pos in ',...
+            '(select pos from %s)'],tablename_jpeg,tablename_sbox));
     
 %%  Upload JPEG to NORM data
 %   Linear Interpolation based CN

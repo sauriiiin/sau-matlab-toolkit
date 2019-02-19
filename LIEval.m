@@ -27,7 +27,7 @@
     setdbprefs({'NullStringRead';'NullStringWrite';'NullNumberRead';'NullNumberWrite'},...
                   {'null';'null';'NaN';'NaN'})
 
-    expt_name = '4C2';
+    expt_name = '4C2_R1';
     density = 6144;
     
 %   MySQL Table Details  
@@ -75,35 +75,42 @@
     
 %%  PLATEWISE RMSE
 
-    for iii = 1:length(n_plates.x6144plate_1)
-        bg = fetch(conn, sprintf(['select a.* ',...
-            'from %s a, %s b ',...
-            'where a.pos = b.pos ',...
-            'and b.%s = %d ',...
-            'order by b.%s, b.%s'],...
-            tablename_fit,p2c_info(1,:),p2c_info(2,:),...
-            iii,p2c_info(3,:),p2c_info(4,:)));
-        for ii = 1:length(bg.average)
-            rmse(ii,iii) = sqrt(mean(((bg.average(ii) - bg.bg(ii)).^2)));
+    for i = 1:length(hours)
+        for iii = 1:length(n_plates.x6144plate_1)
+            clear rmse
+            bg = fetch(conn, sprintf(['select a.* ',...
+                'from %s a, %s b ',...
+                'where a.hours = %d ',...
+                'and a.pos = b.pos ',...
+                'and b.%s = %d ',...
+                'order by b.%s, b.%s'],...
+                tablename_fit,p2c_info(1,:),hours(i),p2c_info(2,:),...
+                iii,p2c_info(3,:),p2c_info(4,:)));
+            for ii = 1:length(bg.average)
+                rmse(ii,iii) = sqrt(mean(((bg.average(ii) - bg.bg(ii)).^2)));
+            end
+
+            max_avg = max(bg.average);
+            min_avg = min(bg.average);
+
+            fig = figure('Renderer', 'painters', 'Position', [10 10 1920 1200],'visible','off');
+            subplot(2,2,1)
+            heatmap(col2grid(bg.average),'ColorLimits',[min_avg max_avg]);
+%             title(sprintf('Observed Pixel Count\n(Plate %d, %d hr)',iii,hours(i)))
+            title('Observed Pixel Count')
+            subplot(2,2,2)
+            heatmap(col2grid(bg.bg),'ColorLimits',[min_avg max_avg]);
+%             title(sprintf('Predicted Pixel Count\n(Plate %d, %d hr)',iii,hours(i)))
+            title('Predicted Pixel Count')
+            subplot(2,2,3)
+            heatmap(col2grid(bg.fitness),'ColorLimits',[0.7 1.4]);
+            title('Fitness')
+            subplot(2,2,4)
+            heatmap(col2grid(rmse(:,iii)),'ColorLimits',[0 120]);
+            title(sprintf('RMSE (%0.3f)',mean(nanmean(rmse))))
+            colormap parula
+            saveas(fig,sprintf('overview%d_%d.png',iii,hours(i)))
         end
-
-        max_avg = max(bg.average);
-        min_avg = min(bg.average);
-
-        figure()
-        subplot(2,2,1)
-        heatmap(col2grid(bg.average),'ColorLimits',[min_avg max_avg])
-        title('Observed Pixel Count')
-        subplot(2,2,2)
-        heatmap(col2grid(bg.bg),'ColorLimits',[min_avg max_avg])
-        title('Predicted Pixel Count')
-        subplot(2,2,3)
-        heatmap(col2grid(bg.fitness),'ColorLimits',[0.7 1.4])
-        title('Fitness')
-        subplot(2,2,4)
-        heatmap(col2grid(rmse(:,iii)),'ColorLimits',[0 120])
-        title('RMSE')
-        colormap parula
     end
 
 %%  POWER, FALSE POSITIVE AND ES
@@ -111,11 +118,13 @@
 %         connectSQL;
     cont_data = fetch(conn, sprintf(['select * from %s ',...
         'where orf_name = ''%s'' ',...
-        'and fitness is not NULL'],tablename_fit,cont.name));
+        'and fitness is not NULL and hours = %d'],...
+        tablename_fit,cont.name,hours));
 
     rest_data = fetch(conn, sprintf(['select * from %s ',...
         'where orf_name != ''%s'' ',...
-        'and fitness is not NULL'],tablename_fit,cont.name));
+        'and fitness is not NULL and hours = %d'],...
+        tablename_fit,cont.name,hours));
 
     cont_dist = [];
     cont_means = [];
@@ -205,6 +214,7 @@
             contp = [contp; ((sum(m>=temp))/tt)*2];
         end
     end
+    contp(contp>1) = 1;
     
     figure()
     histogram(contp, 'Normalization', 'pdf')
