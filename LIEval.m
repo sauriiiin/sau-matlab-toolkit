@@ -97,7 +97,7 @@
             figure()
             subplot(2,2,1)
             heatmap(col2grid(bg.average),'ColorLimits',[min_avg max_avg]);
-%             title(sprintf('Observed Pixel Count\n(Plate %d, %d hr)',iii,hours(i)))
+            title(sprintf('Observed Pixel Count\n(Plate %d, %d hr)',iii,hours(i)))
             title('Observed Pixel Count')
             subplot(2,2,2)
             heatmap(col2grid(bg.bg),'ColorLimits',[min_avg max_avg]);
@@ -292,23 +292,23 @@
     
 %%  SCHEME EFFECT
 
-    schemedat = fetch(conn, ['select a.fitness, b.fitness ',...
-        'from 4C2_6144_FITNESS a, 4C3_6144_FITNESS b ',...
-        'where a.pos = b.pos and a.fitness is not NULL']);
-    
-    data005 = sum(abs(schemedat.fitness - schemedat.fitness_1) < 0.05)/...
-        length(schemedat.fitness);
-    
-    figure()
-    histogram(abs(schemedat.fitness - schemedat.fitness_1),...
-        'Normalization','pdf')
-    grid on
-    xlabel('Fitness Difference')
-    ylabel('Density')
-    text(0.05,90,sprintf('<0.05 contains %0.2f%% of data',data005*100))
-    hold on
-    line(ones(121)*0.05,0:120)
-    title('Upscale Scheme 1 v/s 2')
+%     schemedat = fetch(conn, ['select a.fitness, b.fitness ',...
+%         'from 4C2_6144_FITNESS a, 4C3_6144_FITNESS b ',...
+%         'where a.pos = b.pos and a.fitness is not NULL']);
+%     
+%     data005 = sum(abs(schemedat.fitness - schemedat.fitness_1) < 0.05)/...
+%         length(schemedat.fitness);
+%     
+%     figure()
+%     histogram(abs(schemedat.fitness - schemedat.fitness_1),...
+%         'Normalization','pdf')
+%     grid on
+%     xlabel('Fitness Difference')
+%     ylabel('Density')
+%     text(0.05,90,sprintf('<0.05 contains %0.2f%% of data',data005*100))
+%     hold on
+%     line(ones(121)*0.05,0:120)
+%     title('Upscale Scheme 1 v/s 2')
 
     
 %%  MIN REFERENCE
@@ -590,19 +590,4 @@
         saveas(fig,sprintf('vp_powes_%d_%d.png',cont_hrs,ss))
     end
     
-
-%%  POWER vs ES in context of  No. of Replicates
-
-    hours = [19 20 21 24 25];
-
-    cont_data = fetch(conn, sprintf(['select * from %s ',...
-        'where orf_name = ''%s'' ',...
-        'and fitness is not NULL and hours = %d'],...
-        tablename_fit,cont.name,hours(ii)));
-
-    rest_data = fetch(conn, sprintf(['select * from %s ',...
-        'where orf_name != ''%s'' ',...
-        'and fitness is not NULL and hours = %d'],...
-        tablename_fit,cont.name,hours(ii)));
-
 
