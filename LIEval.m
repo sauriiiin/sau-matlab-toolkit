@@ -117,7 +117,7 @@
 %%  POWER, FALSE POSITIVE AND ES
     
     p = 0:0.01:1;
-    hours = 24;
+    hours = 21;
     for ii=1:length(hours)
         if conn.isopen == 0
             connectSQL;
@@ -183,21 +183,21 @@
             pow = (sum(temp_p<0.05)/length(rest_means{ss}))*100;
     %         (sum(temp_p>0.05)/length(rest_means))*100;
 
-%             figure()
-            fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
-            [f,xi] = ksdensity(cont_means);
-            plot(xi,f,'LineWidth',3)
-            hold on
-            [f,xi] = ksdensity(rest_means{ss});
-            plot(xi,f,'LineWidth',3)
-            legend('control','rest of plate')
-            title(sprintf(['ES = %0.3f \n ',...
-                'Power = %0.3f'],ef_size,pow))
-            xlabel('Fitness')
-            ylabel('Density')
-            grid on
-            hold off
-            saveas(fig,sprintf('powes_%d_ss%d.png',hours(ii), ss))
+% %             figure()
+%             fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
+%             [f,xi] = ksdensity(cont_means);
+%             plot(xi,f,'LineWidth',3)
+%             hold on
+%             [f,xi] = ksdensity(rest_means{ss});
+%             plot(xi,f,'LineWidth',3)
+%             legend('control','rest of plate')
+%             title(sprintf(['ES = %0.3f \n ',...
+%                 'Power = %0.3f'],ef_size,pow))
+%             xlabel('Fitness')
+%             ylabel('Density')
+%             grid on
+%             hold off
+%             saveas(fig,sprintf('powes_%d_ss%d.png',hours(ii), ss))
             
             len = length(pvals{ii}{ss});
             fpdat = [];
@@ -415,8 +415,8 @@
  
     for ss=1:8
         fprintf('sample size = %d\n',ss)
-        cont_hrs = 24;
-        rest_hrs = [17 18 19 20 21 24 25 26 27 28 29];
+        cont_hrs = 21;
+        rest_hrs = [16 17 18 19 20 21 24 25 26 27 28];
         data = [];
     %     ss = 1;
 
@@ -585,7 +585,7 @@
         ylim([0,101])
         xlabel('Effect Size')
         ylabel('Power')
-        title('Power V/S ES')
+        title(sprintf('Power V/S ES (SS = %d)',ss))
         hold off
         saveas(fig,sprintf('vp_powes_%d_%d.png',cont_hrs,ss))
     end
