@@ -231,7 +231,7 @@
     tt = length(m);
 
     contp = [];
-    for i = 1:10000
+    for i = 1:100000
         temp = mean(datasample(cont_data.fitness, 1, 'Replace', false));
         if sum(m<temp) < tt/2
             if m<temp == 0
