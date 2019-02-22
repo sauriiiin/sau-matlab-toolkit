@@ -132,13 +132,15 @@
             'and fitness is not NULL and hours = %d'],...
             tablename_fit,cont.name,hours(ii)));
         
-        s = (((length(cont_data.fitness)*(std(cont_data.fitness))^2 +...
-            length(rest_data.fitness)*(std(rest_data.fitness))^2)/...
-            (length(cont_data.fitness) +...
-            length(rest_data.fitness) - 2))^(0.5));
+%         s = (((length(cont_data.fitness)*(std(cont_data.fitness))^2 +...
+%             length(rest_data.fitness)*(std(rest_data.fitness))^2)/...
+%             (length(cont_data.fitness) +...
+%             length(rest_data.fitness) - 2))^(0.5));
+% 
+%         ef_size = abs(mean(cont_data.fitness) - mean(rest_data.fitness))/s;
+%         N = 2*(1.96 * s/ef_size)^2;
 
-        ef_size = abs(mean(cont_data.fitness) - mean(rest_data.fitness))/s;
-        N = 2*(1.96 * s/ef_size)^2;
+        ef_size = mean(rest_data.fitness)/mean(cont_data.fitness);
 
         cont_dist = [];
         cont_means = [];
@@ -155,7 +157,8 @@
 
         rest_dist =[];
         rest_means = [];
-        for ss=1:8
+        ss = 8;
+%         for ss=1:8
             for i=1:100000
                 rest_dist{ss}(i,:) = datasample(rest_data.fitness, ss, 'Replace', false);
                 rest_means{ss}(i,:) = mean(rest_dist{ss}(i,:));
@@ -183,21 +186,20 @@
             pow = (sum(temp_p<0.05)/length(rest_means{ss}))*100;
     %         (sum(temp_p>0.05)/length(rest_means))*100;
 
-% %             figure()
-%             fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
-%             [f,xi] = ksdensity(cont_means);
-%             plot(xi,f,'LineWidth',3)
-%             hold on
-%             [f,xi] = ksdensity(rest_means{ss});
-%             plot(xi,f,'LineWidth',3)
-%             legend('control','rest of plate')
-%             title(sprintf(['ES = %0.3f \n ',...
-%                 'Power = %0.3f'],ef_size,pow))
-%             xlabel('Fitness')
-%             ylabel('Density')
-%             grid on
-%             hold off
-%             saveas(fig,sprintf('powes_%d_ss%d.png',hours(ii), ss))
+%             figure()
+            fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
+            [f,xi] = ksdensity(cont_means);
+            plot(xi,f,'LineWidth',3)
+            hold on
+            [f,xi] = ksdensity(rest_means{ss});
+            plot(xi,f,'LineWidth',3)
+            legend('control','rest of plate')
+            title(sprintf('ES = %0.3f',ef_size))
+            xlabel('Fitness')
+            ylabel('Density')
+            grid on
+            hold off
+            saveas(fig,sprintf('es_%d_ss%d.png',hours(ii), ss))
             
             len = length(pvals{ii}{ss});
             fpdat = [];
@@ -207,19 +209,19 @@
                 fpdat = [fpdat; [p(i), fp/len]];
             end
 
-            fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
-            histogram(pvals{ii}{ss}, 'Normalization', 'cdf')
-            hold on
-            plot(0:0.01:1,0:0.01:1,'--r','LineWidth',3)
-            grid on
-            xlabel('P Value Cut-offs')
-            ylabel('Proportion of Colonies')
-            title(sprintf('Time = %d hrs (SS = %d)',hours(ii),ss))
-            xlim([0,1])
-            ylim([0,1])
-            saveas(fig,sprintf('pval_colonies_%d_ss%d.png',hours(ii),ss))
+%             fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
+%             histogram(pvals{ii}{ss}, 'Normalization', 'cdf')
+%             hold on
+%             plot(0:0.01:1,0:0.01:1,'--r','LineWidth',3)
+%             grid on
+%             xlabel('P Value Cut-offs')
+%             ylabel('Proportion of Colonies')
+%             title(sprintf('Time = %d hrs (SS = %d)',hours(ii),ss))
+%             xlim([0,1])
+%             ylim([0,1])
+%             saveas(fig,sprintf('pval_colonies_%d_ss%d.png',hours(ii),ss))
             
-        end
+%         end
 
     fprintf('time %d hrs done\n', hours(ii))
     end
@@ -246,46 +248,48 @@
     contp(contp>1) = 1;
     
     figure()
-    histogram(contp, 'Normalization', 'pdf')
+    histogram(contp, 'NumBins', 20, 'Normalization', 'pdf')
     grid on
     xlabel('P Values')
     ylabel('Probability Density')
     title('NULL DISTRIBUTION')
 
 %%  DATA UNDER PVAL CUT-OFFS
-%     
-%     p = 0:0.01:1;
-%     
-%     for ii = 1:length(hours)
-%         len = length(pvals{ii});
-%         fpdat = [];
-% 
-%         for i = 1:length(p)
-%             fp = sum(pvals{ii} <= p(i));
-%             fpdat = [fpdat; [p(i), fp/len]];
-%         end
-% 
-%     %     figure()
-%     %     plot(fpdat(:,1), fpdat(:,2))  
-%     %     grid on
-%     %     xlabel('p-value')
-%     %     ylabel('false positive rate')
-%     %     title('LI FPR in Expt')
-%     %     xlim([0,0.1])
-%     %     ylim([0,0.1])
-% 
-%         fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
-%         histogram(pvals{ii}, 'Normalization', 'cdf')
-%         hold on
-%         plot(0:0.01:1,0:0.01:1,'--r','LineWidth',3)
-%         grid on
-%         xlabel('P Value Cut-offs')
-%         ylabel('Proportion of Colonies')
-%         title(sprintf('Time = %d hrs',hours(ii)))
-%         xlim([0,1])
-%         ylim([0,1])
-%         saveas(fig,sprintf('pval_colonies_%d.png',hours(ii)))
-%     end
+    
+    p = 0:0.01:1;
+    
+    for ii = 1:length(hours)
+        for ss = 1:8
+            len = length(pvals{ii}{ss});
+            fpdat = [];
+
+            for i = 1:length(p)
+                fp = sum(pvals{ii}{ss} <= p(i));
+                fpdat = [fpdat; [p(i), fp/len]];
+            end
+
+        %     figure()
+        %     plot(fpdat(:,1), fpdat(:,2))  
+        %     grid on
+        %     xlabel('p-value')
+        %     ylabel('false positive rate')
+        %     title('LI FPR in Expt')
+        %     xlim([0,0.1])
+        %     ylim([0,0.1])
+
+            fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
+            histogram(pvals{ii}{ss}, 'Normalization', 'cdf')
+            hold on
+            plot(0:0.01:1,0:0.01:1,'--r','LineWidth',3)
+            grid on
+            xlabel('P Value Cut-offs')
+            ylabel('Proportion of Colonies')
+            title(sprintf('Time = %d hrs',hours(ii)))
+            xlim([0,1])
+            ylim([0,1])
+            saveas(fig,sprintf('pval_colonies_%d.png',hours(ii)))
+        end
+    end
 %     
 % %     figure()
 % %     cdfplot(rest_data.average)
@@ -413,10 +417,10 @@
 
 %%  VIRTUAL PLATE POWER ANALYSIS
  
-    for ss=1:8
+    for ss=8
         fprintf('sample size = %d\n',ss)
-        cont_hrs = 21;
-        rest_hrs = [16 17 18 19 20 21 24 25 26 27 28];
+        cont_hrs = 18;
+        rest_hrs = 16;
         data = [];
     %     ss = 1;
 
@@ -527,37 +531,38 @@
                 end
             end
 
-            s = (((length(cont_fit)*(std(cont_fit))^2 +...
-                length(rest_fit)*(std(rest_fit))^2)/...
-                (length(cont_fit) +...
-                length(rest_fit) - 2))^(0.5));
-
-            ef_size = abs(mean(cont_fit) - mean(rest_fit))/s;
-            N = 2*(1.96 * s/ef_size)^2;
+%             s = (((length(cont_fit)*(std(cont_fit))^2 +...
+%                 length(rest_fit)*(std(rest_fit))^2)/...
+%                 (length(cont_fit) +...
+%                 length(rest_fit) - 2))^(0.5));
+% 
+%             ef_size = abs(mean(cont_fit) - mean(rest_fit))/s;
+%             N = 2*(1.96 * s/ef_size)^2;
+            ef_size = mean(rest_fit)/mean(cont_fit);
             pow = (sum(temp_p<0.05)/length(rest_means))*100;
             avg_diff = abs(nanmean(nanmean(cont_avg)) - nanmean(nanmean(rest_avg)));
 
             data = [data; ef_size, pow, avg_diff];
 
-    %         figure()
-    %         fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
-    %         [f,xi] = ksdensity(cont_means);
-    %         plot(xi,f,'LineWidth',3)
-    %         xlim([0.75,1.25])
-    %         ylim([0,30])
-    %         hold on
-    %         [f,xi] = ksdensity(rest_means);
-    %         plot(xi,f,'LineWidth',3)
-    %         legend('control','rest of plate')
-    %         title(sprintf(['TimeC = %d hrs | TimeR = %d hrs \n ',...
-    %             'ES = %0.3f | Power = %0.3f'],...
-    %             cont_hrs,rest_hrs(ii),ef_size,pow))
-    %         xlabel('Fitness')
-    %         ylabel('Density')
-    %         grid on
-    %         grid minor
-    %         hold off
-    %         saveas(fig,sprintf('vp_powes_%d_%d.png',cont_hrs,rest_hrs(ii)))
+%             figure()
+            fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
+            [f,xi] = ksdensity(cont_means);
+            plot(xi,f,'LineWidth',3)
+            xlim([0.75,1.25])
+            ylim([0,30])
+            hold on
+            [f,xi] = ksdensity(rest_means);
+            plot(xi,f,'LineWidth',3)
+            legend('control','rest of plate')
+            title(sprintf(['TimeC = %d hrs | TimeR = %d hrs \n ',...
+                'ES = %0.3f'],...
+                cont_hrs,rest_hrs(ii),ef_size))
+            xlabel('Fitness')
+            ylabel('Density')
+            grid on
+            grid minor
+            hold off
+            saveas(fig,sprintf('vp_powes_%d_%d.png',cont_hrs,rest_hrs(ii)))
         fprintf('Virtual plate %d hrs V/S %d hrs done!\n', cont_hrs,rest_hrs(ii))
         end
 
@@ -589,5 +594,29 @@
         hold off
         saveas(fig,sprintf('vp_powes_%d_%d.png',cont_hrs,ss))
     end
+    
+%%  REPRODUCIBILITY OF RESULTS
+
+    expt1 = "4C2_R1";
+    expt2 = "4C2_R2";
+    
+    hours = 24;
+    
+    fit = fetch(conn, sprintf(['select * from %s_6144_FITNESS a, %s_6144_FITNESS b ',...
+            'where a.hours = %d and b.hours = %d ',...
+            'and a.pos = b.pos and a.fitness is not NULL ',...
+            'and b.fitness is not NULL ',...
+            'order by a.pos'],expt1,expt2,hours,hours));
+        
+    
+    figure()
+%     fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
+    scatter(fit1.fitness, fit1.fitness_1,'MarkerEdgeColor',[0 .5 .5],...
+                  'MarkerFaceColor',[0 .7 .7],...
+                  'LineWidth',2);
+           
+    
+    
+    
     
 
