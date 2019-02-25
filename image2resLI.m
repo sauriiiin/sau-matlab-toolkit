@@ -282,7 +282,10 @@
             'order by hours asc'], tablename_jpeg));
         hours = hours.hours;
         
-        data_fit = LinearInNorm(hours,n_plates,p2c_info,cont.name,...
+%         data_fit = LinearInNorm(hours,n_plates,p2c_info,cont.name,...
+%             tablename_p2o,tablename_jpeg);
+
+        data_fit = LinearInNorm6144(hours,n_plates,p2c_info,cont.name,...
             tablename_p2o,tablename_jpeg);
 
         exec(conn, sprintf('drop table %s',tablename_norm));
