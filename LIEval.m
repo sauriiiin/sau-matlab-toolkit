@@ -298,8 +298,10 @@
 
 %   Random data missing all over the plate
     
-    data = [];
-    for ss = 0:20:1530
+    data = []; rmse = [];
+    ss = 0:20:300;
+    
+    for j=1:length(ss)
         pos_miss = [];
         pos_cont = [];
 
@@ -325,7 +327,7 @@
             p2c_info(3,:),...
             p2c_info(4,:)));
 
-        pos_miss = datasample(pos.cont.pos,ss,'Replace',false);
+        pos_miss = datasample(pos.cont.pos,ss(j),'Replace',false);
         pos_cont = pos.cont.pos(~ismember(pos.cont.pos,pos_miss));
 
         avg_data = fetch(conn, sprintf(['select a.pos, a.hours, a.average ',...
@@ -378,16 +380,19 @@
         bg(bg == 0) = NaN;
         bg(isnan(avg_data.average)) = NaN;
 
-        rmse = abs(bg - avg_data.average);
-        data = [data; [ss, sqrt(nanmean(rmse.^2))]];
-        clear rmse bg
-        
-        sprintf('%d missing references done',ss)
-        
+        rmse(:,j) = abs(bg - avg_data.average);
+        data = [data; [ss(j), sqrt(nanmean(rmse(j).^2))]];
+        clear bg
+        sprintf('%d missing references done',ss(j))
     end
     
-    figure()
-    plot(data(:,1),data(:,2))
+    for i = 2:length(ss)
+        if ranksum(rmse(:,1),rmse(:,i),'tail','left') <= 0.05
+            sprintf(['Significantly poor RMSE when %d ',...
+                'references are missing at random.'],ss(i))
+        end
+    end
+            
     
 %   Smudge type of missing
 
@@ -622,10 +627,14 @@
                 iii,p2c_info(3,:),p2c_info(4,:)));
 
             for ii = 1:length(bg1.average)
-                e1((iii-1)*6144+ii,1) = abs(bg1.average(ii) - bg1.bg(ii));
-                e2((iii-1)*6144+ii,1) = abs(bg2.average(ii) - bg2.bg(ii));
-                e3((iii-1)*6144+ii,1) = abs(bg3.average(ii) - bg3.bg(ii));
-                e4((iii-1)*6144+ii,1) = abs(bg4.average(ii) - bg4.bg(ii));
+%                 e1((iii-1)*6144+ii,1) = abs(bg1.average(ii) - bg1.bg(ii));
+%                 e2((iii-1)*6144+ii,1) = abs(bg2.average(ii) - bg2.bg(ii));
+%                 e3((iii-1)*6144+ii,1) = abs(bg3.average(ii) - bg3.bg(ii));
+%                 e4((iii-1)*6144+ii,1) = abs(bg4.average(ii) - bg4.bg(ii));
+                e1((iii-1)*6144+ii,1) = (bg1.average(ii) - bg1.bg(ii)).^2;
+                e2((iii-1)*6144+ii,1) = (bg2.average(ii) - bg2.bg(ii)).^2;
+                e3((iii-1)*6144+ii,1) = (bg3.average(ii) - bg3.bg(ii)).^2;
+                e4((iii-1)*6144+ii,1) = (bg4.average(ii) - bg4.bg(ii)).^2;
             end
         end
 
