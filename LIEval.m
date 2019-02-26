@@ -87,7 +87,7 @@
                 tablename_fit,p2c_info(1,:),hours(i),p2c_info(2,:),...
                 iii,p2c_info(3,:),p2c_info(4,:)));
             for ii = 1:length(bg.average)
-                rmse(ii,iii) = sqrt(mean(((bg.average(ii) - bg.bg(ii)).^2)));
+                rmse(ii,iii) = (bg.average(ii) - bg.bg(ii)).^2;
             end
 
             max_avg = max(bg.average);
@@ -107,8 +107,8 @@
             heatmap(col2grid(bg.fitness),'ColorLimits',[0.7 1.4]);
             title('Fitness')
             subplot(2,2,4)
-            heatmap(col2grid(rmse(:,iii)),'ColorLimits',[0 120]);
-            title(sprintf('RMSE (%0.3f)',mean(nanmean(rmse))))
+            heatmap(col2grid(abs(bg.average - bg.bg)),'ColorLimits',[0 120]);
+            title(sprintf('RMSE (%0.3f)',sqrt(nanmean(rmse(:,iii)))))
             colormap parula
 %             saveas(fig,sprintf('overview%d_%d.png',iii,hours(i)))
         end
@@ -294,124 +294,97 @@
 % %     figure()
 % %     cdfplot(rest_data.average)
     
-%%  SCHEME EFFECT
-
-%     schemedat = fetch(conn, ['select a.fitness, b.fitness ',...
-%         'from 4C2_6144_FITNESS a, 4C3_6144_FITNESS b ',...
-%         'where a.pos = b.pos and a.fitness is not NULL']);
-%     
-%     data005 = sum(abs(schemedat.fitness - schemedat.fitness_1) < 0.05)/...
-%         length(schemedat.fitness);
-%     
-%     figure()
-%     histogram(abs(schemedat.fitness - schemedat.fitness_1),...
-%         'Normalization','pdf')
-%     grid on
-%     xlabel('Fitness Difference')
-%     ylabel('Density')
-%     text(0.05,90,sprintf('<0.05 contains %0.2f%% of data',data005*100))
-%     hold on
-%     line(ones(121)*0.05,0:120)
-%     title('Upscale Scheme 1 v/s 2')
-
-    
-%%  MIN REFERENCE
-%   On rest of the plate
-    
-%     N = 2*(1.96 * s/ef_size)^2
-% 
-%     minref_p = [];
-%     
-%     for ii = 1:10
-%         samp_dist =[];
-%         samp_means = [];
-%         for i=1:10
-%             samp_dist(i,:) = datasample(rest_data.fitness, 8, 'Replace', false);
-%             samp_means(i,:) = mean(samp_dist(i,:));
-%     %             samp_std(i,:) = std(samp_dist(i,:));
-%         end
-%     %     ksdensity(samp_means);
-% 
-%         sampmean = nanmean(samp_means);
-%         sampstd = nanstd(samp_means);
-% 
-%         m = cont_means;
-%         tt = length(m);
-% 
-%         pvals = [];
-%         stat = [];
-%         for i = 1:length(samp_means)
-%             if sum(m<samp_means(i)) < tt/2
-%                 if m<samp_means(i) == 0
-%                     pvals = [pvals; 1/tt];
-%                     stat = [stat; (samp_means(i) - contmean)/contstd];
-%                 else
-%                     pvals = [pvals; ((sum(m<=samp_means(i))+1)/tt)*2];
-%                     stat = [stat; (samp_means(i) - contmean)/contstd];
-%                 end
-%             else
-%                 pvals = [pvals; ((sum(m>=samp_means(i))+1)/tt)*2];
-%                 stat = [stat; (samp_means(i) - contmean)/contstd];
-%             end
-%         end
-% 
-%     %     s = (((length(cont_data.fitness)*(std(cont_data.fitness))^2 +...
-%     %         length(samp_data.fitness)*(std(samp_data.fitness))^2)/...
-%     %         (length(cont_data.fitness) +...
-%     %         length(samp_data.fitness) - 2))^(0.5));
-%     %     
-%     %     ef_size = abs(mean(cont_data.fitness) - mean(samp_data.fitness))/s
-% 
-%         minref_p(ii) = (sum(pvals<0.05)/length(samp_means))*100;
-%     end
-%   
-%     mean(minref_p)
-%  
 
 %%  MISSING DATA WHEN CALCULATING BG
 
 %   Random data missing all over the plate
 
-    miss_data = fetch(conn, sprintf(['select * from %s a, %s b ',...
-        'where a.pos = b.pos and orf_name = ''%s'' ',...
-        'order by %s, %s, %s'], tablename_fit, p2c_info(1,:),...
-        cont.name,...
+    cont_pos = fetch(conn, sprintf(['select a.pos from %s a, %s b ',...
+        'where a.pos = b.pos and a.orf_name = ''%s'' and b.%s = 1 ',...
+        'order by %s, %s, %s'], tablename_p2o, p2c_info(1,:),...
+        cont.name,p2c_info(2,:),...
         p2c_info(2,:), p2c_info(3,:), p2c_info(4,:)));
     
-    pos = datasample(cont_data.pos(1:length(cont_data.pos)/2),320)';
-    pos = [pos, pos + 6144];
+    
+    pos.all = fetch(conn, sprintf(['select a.pos ',...
+        'from %s a ',...
+        'where %s = %d ',...
+        'order by %s, %s'],...
+        p2c_info(1,:),...
+        p2c_info(2,:),...
+        n_plates.x6144plate_1(1),...
+        p2c_info(3,:),...
+        p2c_info(4,:)));
 
-    a = contBG(miss_data.average(1:1536).*~ismember(miss_data.pos(1:1536), pos));
-    b = col2grid(miss_data.average(1:1536))./a;
-    c = contBG(miss_data.average(1537:1536*2).*~ismember(miss_data.pos(1537:1536*2), pos));
-    d = col2grid(miss_data.average(1537:1536*2))./c;
+    pos.cont = fetch(conn, sprintf(['select a.pos ',...
+        'from %s a, %s b ',...
+        'where a.pos = b.pos and %s = %d and a.orf_name = ''%s'' ',...
+        'order by %s, %s'],...
+        tablename_p2o,...
+        p2c_info(1,:),...
+        p2c_info(2,:),...
+        n_plates.x6144plate_1(1),...
+        cont.name,...
+        p2c_info(3,:),...
+        p2c_info(4,:)));
+    
+    pos.miss = datasample(pos.cont.pos,20); %miss 20
+    pos.cont.pos = pos.cont.pos(~ismember(pos.cont.pos,pos.miss));
+    
 
-    e = [grid2row(b), grid2row(d)];
-    e = e(~isnan(e));
+    avg_data = fetch(conn, sprintf(['select a.pos, a.hours, a.average ',...
+        'from %s a, %s b ',...
+        'where a.pos = b.pos and hours = %d and %s = %d ',...
+        'order by %s, %s'],...
+        tablename_jpeg,...
+        p2c_info(1,:),...
+        hours(ii),...
+        p2c_info(2,:),...
+        n_plates.x6144plate_1(1),...
+        p2c_info(3,:),...
+        p2c_info(4,:)));
 
-    m = e;
-    tt = length(e);
-    contp = [];
+    cont_pos = col2grid(ismember(pos.all.pos, pos.cont.pos));
+    cont_avg = col2grid(avg_data.average).*cont_pos;
 
-    for ii = 1:10000
-        temp = mean(datasample(e, 1, 'Replace', false));
-        if sum(m<temp) < tt/2
-            if m<temp == 0
-                contp = [contp; 1/tt];
-            else
-                contp = [contp; ((sum(m<=temp))/tt)*2];
-            end
-        else
-            contp = [contp; ((sum(m>=temp))/tt)*2];
+    cont_avg(cont_avg == 0) = NaN;
+    [a,b,c,d] = downscale(cont_avg);
+    plates = {a,b,c,d};
+
+    for i=1:4
+        [p,q,r,s] = downscale(plates{i});
+        plates{i} = (fillmissing(fillmissing(plates{i}, 'linear',2),'linear',1) +...
+                (fillmissing(fillmissing(plates{i}, 'linear',1),'linear',2)))/2;
+
+        if nansum(nansum(p)) ~= 0 %Top Left
+            P = contBG(p);
+            [~,x,y,z] = downscale(plates{i});
+            bground{i} = plategen(P,x,y,z);
+
+        elseif nansum(nansum(q)) ~= 0 % Top Right
+            Q = contBG(q);
+            [x,~,y,z] = downscale(plates{i});
+            bground{i} = plategen(x,Q,y,z);
+
+        elseif nansum(nansum(r)) ~= 0 % Bottom Left
+            R = contBG(r);
+            [x,y,~,z] = downscale(plates{i});
+            bground{i} = plategen(x,y,R,z);
+
+        else % Bottom Right
+            S = contBG(s);
+            [x,y,z,~] = downscale(plates{i});
+            bground{i} = plategen(x,y,z,S);
+
         end
     end
+    bg = grid2row(plategen(bground{1},bground{2},bground{3},bground{4}))';%.*nonzero)';
+    bg(bg == 0) = NaN;
+    bg(isnan(avg_data.average)) = NaN;
     
-    figure()
-    histogram(contp, 'Normalization', 'pdf')
-    grid on
-    xlabel('P Values')
-    ylabel('Probability Density')
-    title('NULL DISTRIBUTION')
+    for j = 1:length(bg.average)
+        rmse(j) = sqrt(mean(((bg(j) - avg_data.average(j)).^2)));
+    end
 
 %   Smudge type of missing
 
@@ -595,7 +568,7 @@
         saveas(fig,sprintf('vp_powes_%d_%d.png',cont_hrs,ss))
     end
     
-%%  REPRODUCIBILITY OF RESULTS
+%%  EFFECT OF SCHEMES AND INTERLEAVING
 
     expt1 = "4C2_R1";
     expt2 = "4C2_R2";
@@ -646,30 +619,43 @@
                 iii,p2c_info(3,:),p2c_info(4,:)));
 
             for ii = 1:length(bg1.average)
-                rmse1((iii-1)*6144+ii,1) = sqrt(mean(((bg1.average(ii) - bg1.bg(ii)).^2)));
-                rmse2((iii-1)*6144+ii,1) = sqrt(mean(((bg2.average(ii) - bg2.bg(ii)).^2)));
-                rmse3((iii-1)*6144+ii,1) = sqrt(mean(((bg3.average(ii) - bg3.bg(ii)).^2)));
-                rmse4((iii-1)*6144+ii,1) = sqrt(mean(((bg4.average(ii) - bg4.bg(ii)).^2)));
+                e1((iii-1)*6144+ii,1) = abs(bg1.average(ii) - bg1.bg(ii));
+                e2((iii-1)*6144+ii,1) = abs(bg2.average(ii) - bg2.bg(ii));
+                e3((iii-1)*6144+ii,1) = abs(bg3.average(ii) - bg3.bg(ii));
+                e4((iii-1)*6144+ii,1) = abs(bg4.average(ii) - bg4.bg(ii));
             end
         end
 
-        rmse1 = rmse1(~isnan(rmse1));
-        rmse2 = rmse2(~isnan(rmse2));
-        rmse3 = rmse3(~isnan(rmse3));
-        rmse4 = rmse4(~isnan(rmse4));
+        e1 = e1(~isnan(e1));
+        e2 = e2(~isnan(e2));
+        e3 = e3(~isnan(e3));
+        e4 = e4(~isnan(e4));
 
-        better12 = [better12;[hours(i),median(rmse1),median(rmse2),...
-            ranksum(rmse1,rmse2,'tail','right'),...
-            ranksum(rmse1,rmse2,'tail','left')]];
-        better1n = [better1n;[hours(i),median(rmse1),median(rmse3),...
-            ranksum(rmse1,rmse3,'tail','right'),...
-            ranksum(rmse1,rmse3,'tail','left')]];
-        better2n = [better2n;[hours(i),median(rmse2),median(rmse4),...
-            ranksum(rmse2,rmse4,'tail','right'),...
-            ranksum(rmse2,rmse4,'tail','left')]];
+        better12 = [better12;[hours(i),sqrt(mean(e1.^2)),sqrt(mean(e2.^2)),...
+            ranksum(e1,e2,'tail','right'),...
+            ranksum(e1,e2,'tail','left')]];
+        better1n = [better1n;[hours(i),sqrt(mean(e1.^2)),sqrt(mean(e3.^2)),...
+            ranksum(e1,e3,'tail','right'),...
+            ranksum(e1,e3,'tail','left')]];
+        better2n = [better2n;[hours(i),sqrt(mean(e2.^2)),sqrt(mean(e4.^2)),...
+            ranksum(e2,e4,'tail','right'),...
+            ranksum(e2,e4,'tail','left')]];
     end
 
     
     sum(better12(:,4)<0.05)/length(better12)
     sum(better1n(:,4)<0.05)/length(better1n)
     sum(better2n(:,4)<0.05)/length(better2n)
+    
+    
+%     exec(conn, 'drop table 4C2_R2R2N_RMSE');
+%     exec(conn, ['create table 4C2_R2R2N_RMSE( ',...
+%                 'hours int(11) not NULL, ',...
+%                 'R2_rmse double default NULL, ',...
+%                 'R2N_rmse double default NULL, ',...
+%                 'p_right double default NULL, ',...
+%                 'p_left double default NULL)']);
+%             
+%     datainsert(conn, '4C2_R2R2N_RMSE',...
+%         {'hours','R2_rmse','R2N_rmse','p_right','p_left'},better2n);
+
