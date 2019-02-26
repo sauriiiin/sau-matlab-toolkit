@@ -27,7 +27,7 @@
     setdbprefs({'NullStringRead';'NullStringWrite';'NullNumberRead';'NullNumberWrite'},...
                   {'null';'null';'NaN';'NaN'})
 
-    expt_name = '4C2_R2_NIL';
+    expt_name = '4C2_R1';
     density = 6144;
     
 %   MySQL Table Details  
@@ -40,7 +40,7 @@
     tablename_pval      = sprintf('%s_%d_PVALUE',expt_name,density);
     tablename_res       = sprintf('%s_%d_RES',expt_name,density);
     
-    tablename_p2o       = 'VP_pos2orf_name2';
+    tablename_p2o       = 'VP_pos2orf_name1';
     tablename_bpos      = 'VP_borderpos';
     
 %   Reference Strain Name
@@ -599,14 +599,13 @@
 
     expt1 = "4C2_R1";
     expt2 = "4C2_R2";
-    expt3 = "4C2_R13";
-    expt4 = "4C2_R1_NIL";
+    expt3 = "4C2_R1_NIL";
+    expt4 = "4C2_R2_NIL";
     
 %     hours = 24;
     better12 = [];
     better1n = [];
-    better23 = [];
-    bettern3 = [];
+    better2n = [];
     
     for i = 1:length(hours)
         for iii = 1:length(n_plates.x6144plate_1)
@@ -662,19 +661,15 @@
         better12 = [better12;[hours(i),median(rmse1),median(rmse2),...
             ranksum(rmse1,rmse2,'tail','right'),...
             ranksum(rmse1,rmse2,'tail','left')]];
-        better1n = [better1n;[hours(i),median(rmse1),median(rmse4),...
-            ranksum(rmse1,rmse4,'tail','right'),...
-            ranksum(rmse1,rmse4,'tail','left')]];
-        better23 = [better23;[hours(i),median(rmse2),median(rmse3),...
-            ranksum(rmse2,rmse3,'tail','right'),...
-            ranksum(rmse2,rmse3,'tail','left')]];
-        bettern3 = [bettern3;[hours(i),median(rmse4),median(rmse3),...
-            ranksum(rmse4,rmse3,'tail','right'),...
-            ranksum(rmse4,rmse3,'tail','left')]];
+        better1n = [better1n;[hours(i),median(rmse1),median(rmse3),...
+            ranksum(rmse1,rmse3,'tail','right'),...
+            ranksum(rmse1,rmse3,'tail','left')]];
+        better2n = [better2n;[hours(i),median(rmse2),median(rmse4),...
+            ranksum(rmse2,rmse4,'tail','right'),...
+            ranksum(rmse2,rmse4,'tail','left')]];
     end
 
     
     sum(better12(:,4)<0.05)/length(better12)
     sum(better1n(:,4)<0.05)/length(better1n)
-    sum(better23(:,4)<0.05)/length(better23)
-    sum(bettern3(:,4)<0.05)/length(bettern3)
+    sum(better2n(:,4)<0.05)/length(better2n)
