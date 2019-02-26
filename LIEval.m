@@ -130,14 +130,6 @@
             'where orf_name != ''%s'' ',...
             'and fitness is not NULL and hours = %d'],...
             tablename_fit,cont.name,hours(ii)));
-        
-%         s = (((length(cont_data.fitness)*(std(cont_data.fitness))^2 +...
-%             length(rest_data.fitness)*(std(rest_data.fitness))^2)/...
-%             (length(cont_data.fitness) +...
-%             length(rest_data.fitness) - 2))^(0.5));
-% 
-%         ef_size = abs(mean(cont_data.fitness) - mean(rest_data.fitness))/s;
-%         N = 2*(1.96 * s/ef_size)^2;
 
         ef_size = mean(rest_data.fitness)/mean(cont_data.fitness);
 
@@ -183,7 +175,6 @@
             end
             pvals{ii}{ss} = temp_p; stat{ii}{ss} = temp_s;
             pow = (sum(temp_p<0.05)/length(rest_means{ss}))*100;
-    %         (sum(temp_p>0.05)/length(rest_means))*100;
 
 %             figure()
             fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
@@ -266,15 +257,6 @@
                 fp = sum(pvals{ii}{ss} <= p(i));
                 fpdat = [fpdat; [p(i), fp/len]];
             end
-
-        %     figure()
-        %     plot(fpdat(:,1), fpdat(:,2))  
-        %     grid on
-        %     xlabel('p-value')
-        %     ylabel('false positive rate')
-        %     title('LI FPR in Expt')
-        %     xlim([0,0.1])
-        %     ylim([0,0.1])
 
             fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
             histogram(pvals{ii}{ss}, 'Normalization', 'cdf')
@@ -394,7 +376,101 @@
     end
             
     
-%   Smudge type of missing
+%   Upscale Patter Specific Loss
+
+%   Making control grid from PT2 experiment
+    cont96 = fetch(conn, ['select pos from PT2_pos2orf_name ',...
+        'where orf_name = ''BF_control'' ',...
+        'and pos < 10000 ',...
+        'and pos not in ',...
+        '(select * from PT2_borderpos)']);
+    
+    all6144 = fetch(conn, ['select a.pos ',...
+        'from PT2_pos2orf_name a, PT2_pos2coor6144 b ',...
+        'where a.pos = b.pos and 6144plate = 1 ',...
+        'order by 6144plate, 6144col, 6144row']);
+    
+    cont6144 = fetch(conn, ['select a.pos ',...
+        'from PT2_pos2orf_name a, PT2_pos2coor6144 b ',...
+        'where a.pos = b.pos and 6144plate = 1 ',...
+        'and a.orf_name = ''BF_control'' ',...
+        'order by 6144plate, 6144col, 6144row']);
+    
+    pos_reps = [110000,120000,130000,140000];
+    
+    data = []; rmse = [];
+    ss = 0:5:70;
+    
+    for j=1:length(ss)
+        pos_miss = [];
+        pos_cont = [];
+
+        avg_data = fetch(conn, sprintf(['select a.pos, a.hours, a.average ',...
+            'from %s a, %s b ',...
+            'where a.pos = b.pos and hours = %d and %s = %d ',...
+            'order by %s, %s'],...
+            tablename_jpeg,...
+            p2c_info(1,:),...
+            hours(ii),...
+            p2c_info(2,:),...
+            n_plates.x6144plate_1(1),...
+            p2c_info(3,:),...
+            p2c_info(4,:)));
+        
+        temp = pos_reps + datasample(cont96.pos, ss(j), 'Replace', false);
+        pos_cont = cont6144.pos(~ismember(cont6144.pos, temp));
+        cont_pos = col2grid(ismember(all6144.pos, pos_cont));
+        
+        cont_avg = col2grid(avg_data.average).*cont_pos;
+
+        cont_avg(cont_avg == 0) = NaN;
+        [a,b,c,d] = downscale(cont_avg);
+        plates = {a,b,c,d};
+
+        for i=1:4
+            [p,q,r,s] = downscale(plates{i});
+            plates{i} = (fillmissing(fillmissing(plates{i}, 'linear',2),'linear',1) +...
+                    (fillmissing(fillmissing(plates{i}, 'linear',1),'linear',2)))/2;
+
+            if nansum(nansum(p)) ~= 0 %Top Left
+                P = contBG(p);
+                [~,x,y,z] = downscale(plates{i});
+                bground{i} = plategen(P,x,y,z);
+
+            elseif nansum(nansum(q)) ~= 0 % Top Right
+                Q = contBG(q);
+                [x,~,y,z] = downscale(plates{i});
+                bground{i} = plategen(x,Q,y,z);
+
+            elseif nansum(nansum(r)) ~= 0 % Bottom Left
+                R = contBG(r);
+                [x,y,~,z] = downscale(plates{i});
+                bground{i} = plategen(x,y,R,z);
+
+            else % Bottom Right
+                S = contBG(s);
+                [x,y,z,~] = downscale(plates{i});
+                bground{i} = plategen(x,y,z,S);
+
+            end
+        end
+        bg = grid2row(plategen(bground{1},bground{2},bground{3},bground{4}))';%.*nonzero)';
+        bg(bg == 0) = NaN;
+        bg(isnan(avg_data.average)) = NaN;
+
+        rmse(:,j) = abs(bg - avg_data.average);
+        data = [data; [ss(j), sqrt(nanmean(rmse(j).^2))]];
+        clear bg
+        sprintf('%d missing references done',ss(j)*4)
+    end
+    
+    for i = 2:length(ss)
+        ranksum(rmse(:,1),rmse(:,i),'tail','left')
+        if ranksum(rmse(:,1),rmse(:,i),'tail','left') <= 0.05
+            sprintf(['Significantly poor RMSE when %d ',...
+                'references are missing.'],ss(i)*4)
+        end
+    end
 
 %%  VIRTUAL PLATE POWER ANALYSIS
  
@@ -512,13 +588,6 @@
                 end
             end
 
-%             s = (((length(cont_fit)*(std(cont_fit))^2 +...
-%                 length(rest_fit)*(std(rest_fit))^2)/...
-%                 (length(cont_fit) +...
-%                 length(rest_fit) - 2))^(0.5));
-% 
-%             ef_size = abs(mean(cont_fit) - mean(rest_fit))/s;
-%             N = 2*(1.96 * s/ef_size)^2;
             ef_size = mean(rest_fit)/mean(cont_fit);
             pow = (sum(temp_p<0.05)/length(rest_means))*100;
             avg_diff = abs(nanmean(nanmean(cont_avg)) - nanmean(nanmean(rest_avg)));
@@ -627,10 +696,6 @@
                 iii,p2c_info(3,:),p2c_info(4,:)));
 
             for ii = 1:length(bg1.average)
-%                 e1((iii-1)*6144+ii,1) = abs(bg1.average(ii) - bg1.bg(ii));
-%                 e2((iii-1)*6144+ii,1) = abs(bg2.average(ii) - bg2.bg(ii));
-%                 e3((iii-1)*6144+ii,1) = abs(bg3.average(ii) - bg3.bg(ii));
-%                 e4((iii-1)*6144+ii,1) = abs(bg4.average(ii) - bg4.bg(ii));
                 e1((iii-1)*6144+ii,1) = (bg1.average(ii) - bg1.bg(ii)).^2;
                 e2((iii-1)*6144+ii,1) = (bg2.average(ii) - bg2.bg(ii)).^2;
                 e3((iii-1)*6144+ii,1) = (bg3.average(ii) - bg3.bg(ii)).^2;
