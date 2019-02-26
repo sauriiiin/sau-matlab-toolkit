@@ -86,9 +86,8 @@
                 'order by b.%s, b.%s'],...
                 tablename_fit,p2c_info(1,:),hours(i),p2c_info(2,:),...
                 iii,p2c_info(3,:),p2c_info(4,:)));
-            for ii = 1:length(bg.average)
-                rmse(ii,iii) = (bg.average(ii) - bg.bg(ii)).^2;
-            end
+
+            rmse(:,iii) = (bg.average - bg.bg).^2;
 
             max_avg = max(bg.average);
             min_avg = min(bg.average);
@@ -300,7 +299,7 @@
 %   Random data missing all over the plate
     
     data = [];
-    for ss = 20:20:100
+    for ss = 0:20:1530
         pos_miss = [];
         pos_cont = [];
 
@@ -379,12 +378,16 @@
         bg(bg == 0) = NaN;
         bg(isnan(avg_data.average)) = NaN;
 
-        for j = 1:length(bg)
-            rmse(j) = abs(bg(j) - avg_data.average(j));
-        end
-        data = [data, [ss, sqrt(nanmean(rmse.^2))]];
+        rmse = abs(bg - avg_data.average);
+        data = [data; [ss, sqrt(nanmean(rmse.^2))]];
         clear rmse bg
+        
+        sprintf('%d missing references done',ss)
+        
     end
+    
+    figure()
+    plot(data(:,1),data(:,2))
     
 %   Smudge type of missing
 
