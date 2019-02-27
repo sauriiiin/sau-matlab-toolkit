@@ -274,8 +274,7 @@
     
 
 %%  MISSING DATA WHEN CALCULATING BG
-
-%   Random data missing all over the plate
+%%  Random data missing all over the plate
 
     ii = 1; iii = 1;
     
@@ -355,16 +354,23 @@
 %         fprintf('%d missing references done!\n',ss(j))
     end
     
+    p = polyfit(data(:,1),data(:,2),1);
+    
     figure()
-    plot(data(:,1),data(:,2))
+    scatter(data(:,1),data(:,2),'MarkerEdgeColor',[0 .5 .5],...
+                  'MarkerFaceColor',[0 .7 .7],...
+                  'LineWidth',2);
+    hold on
+    plot(data(:,1),polyval(p,data(:,1)),'--r',...
+        'LineWidth',2)
     grid on
     grid minor
-    xlim([min(ss(2:end)),max(ss(2:end))])
-    ylim([0,10])
+    xlim([140,310])
+    ylim([-0.5,10.5])
     xlabel('Number of References Missing at Random')
     ylabel(sprintf('Significantly Lower SE (over %d times)',n))
     
-%   Upscale Pattern Specific Loss
+%%  Upscale Pattern Specific Loss
 
 %   Making control grid from PT2 experiment
     cont96 = fetch(conn, ['select pos from PT2_pos2orf_name ',...
@@ -440,12 +446,19 @@
 %         fprintf('%d missing references done!\n',ss(j)*4)
     end
     
+    p = polyfit(data(:,1),data(:,2),1);
+    
     figure()
-    plot(data(:,1),data(:,2))
+    scatter(data(:,1),data(:,2),'MarkerEdgeColor',[0 .5 .5],...
+                  'MarkerFaceColor',[0 .7 .7],...
+                  'LineWidth',2);
+    hold on
+    plot(data(:,1),polyval(p,data(:,1)),'--r',...
+        'LineWidth',2)
     grid on
     grid minor
-    xlim([min(ss(2:end)),max(ss(2:end))])
-    ylim([0,10])
+    xlim([140,310])
+    ylim([-0.5,10.5])
     xlabel('Number of References Missing')
     ylabel(sprintf('Significantly Lower SE (over %d times)',n))
 
