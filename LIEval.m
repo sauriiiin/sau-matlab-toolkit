@@ -276,6 +276,8 @@
 %%  MISSING DATA WHEN CALCULATING BG
 
 %   Random data missing all over the plate
+
+    ii = 1; iii = 1;
     
     pos.border = fetch(conn, sprintf('select pos from %s',...
          tablename_bpos));
@@ -315,46 +317,45 @@
         p2c_info(4,:)));
      
     data = []; rmse = [];
-    ss = 0:30:300;
-        
-    ii = 1; iii = 1;
+    ss = [0 150:20:300];
     
     for j=1:length(ss)
-        pos_miss = [];
-        pos_cont = [];
+        tt = 0;
+        for n = 1:10
+            pos_miss = datasample(pos.cont.pos(~ismember(pos.cont.pos, pos.border.pos)),...
+                ss(j),'Replace',false);
+            pos_cont = pos.cont.pos(~ismember(pos.cont.pos,pos_miss));
 
-        pos_miss = datasample(pos.cont.pos(~ismember(pos.cont.pos, pos.border.pos)),...
-            ss(j),'Replace',false);
-        pos_cont = pos.cont.pos(~ismember(pos.cont.pos,pos_miss));
+            cont_pos = col2grid(ismember(pos.all.pos, pos_cont));
+            cont_avg = col2grid(avg_data.average).*cont_pos;
 
-        cont_pos = col2grid(ismember(pos.all.pos, pos_cont));
-        cont_avg = col2grid(avg_data.average).*cont_pos;
+            cont_avg(cont_avg == 0) = NaN;
+            [a,b,c,d] = downscale(cont_avg);
+            plates = {a,b,c,d};
 
-        cont_avg(cont_avg == 0) = NaN;
-        [a,b,c,d] = downscale(cont_avg);
-        plates = {a,b,c,d};
-        
-        bground = LIHeart(plates,1); % calculate bg with interpolation
+            bground = LIHeart(plates,0); 
 
-        bg = grid2row(plategen(bground{1},bground{2},bground{3},bground{4}))';%.*nonzero)';
-        bg(bg == 0) = NaN;
-        bg(isnan(avg_data.average)) = NaN;
+            bg = grid2row(plategen(bground{1},bground{2},bground{3},bground{4}))';
+            bg(bg == 0) = NaN;
+            bg(isnan(avg_data.average)) = NaN;
 
-        rmse(:,j) = abs(bg - avg_data.average);
-        data = [data; [ss(j), sqrt(nanmean(rmse(j).^2))]];
-        clear bg
-        sprintf('%d missing references done',ss(j))
-    end
-    
-    for i = 2:length(ss)
-        if ranksum(rmse(:,1),rmse(:,i),'tail','left') <= 0.05
-            sprintf(['Significantly poor RMSE when %d ',...
-                'references are missing at random.'],ss(i))
-        end
-    end
+            rmse{j}(:,n) = abs(bg - avg_data.average);
             
+            if ranksum(rmse{1}(:,1),rmse{j}(:,n),'tail','left') <= 0.05
+                tt = tt + 1;
+%                 figure()
+%                 heatmap(cont_pos,'ColorbarVisible','off')
+%                 title(sprintf('Randomly Missing %d References',ss(j)))
+            end
+            clear bg
+        end
+        fprintf(['Significantly poor SE %d/10 times when %d ',...
+            'references are missing at random.\n'],tt,ss(j))
+        data = [data; [ss(j), tt]];
+%         fprintf('%d missing references done!\n',ss(j))
+    end
     
-%   Upscale Patter Specific Loss
+%   Upscale Pattern Specific Loss
 
 %   Making control grid from PT2 experiment
     cont96 = fetch(conn, ['select pos from PT2_pos2orf_name ',...
@@ -376,6 +377,8 @@
     
     pos_reps = [110000,120000,130000,140000];
     
+    
+    ii = 1; iii = 1;
     avg_data = fetch(conn, sprintf(['select a.pos, a.hours, a.average ',...
         'from %s a, %s b ',...
         'where a.pos = b.pos and hours = %d and %s = %d ',...
@@ -389,42 +392,43 @@
         p2c_info(4,:)));
     
     data = []; rmse = [];
-    ss = 0:10:70;
-    
-    ii = 1; iii = 1;
+    ss = 0:10:100;
     
     for j=1:length(ss)
-        pos_miss = [];
-        pos_cont = [];
-        
-        temp = pos_reps + datasample(cont96.pos, ss(j), 'Replace', false);
-        pos_cont = cont6144.pos(~ismember(cont6144.pos, temp));
-        cont_pos = col2grid(ismember(all6144.pos, pos_cont));
-        
-        cont_avg = col2grid(avg_data.average).*cont_pos;
+        tt = 0;
+        for n = 1:10
+            temp = pos_reps + datasample(cont96.pos, ss(j), 'Replace', false);
+            pos_cont = cont6144.pos(~ismember(cont6144.pos, temp));
+            cont_pos = col2grid(ismember(all6144.pos, pos_cont));
 
-        cont_avg(cont_avg == 0) = NaN;
-        [a,b,c,d] = downscale(cont_avg);
-        plates = {a,b,c,d};
+            cont_avg = col2grid(avg_data.average).*cont_pos;
 
-        bground = LIHeart(plates,1);
-        
-        bg = grid2row(plategen(bground{1},bground{2},bground{3},bground{4}))';%.*nonzero)';
-        bg(bg == 0) = NaN;
-        bg(isnan(avg_data.average)) = NaN;
+            cont_avg(cont_avg == 0) = NaN;
+            [a,b,c,d] = downscale(cont_avg);
+            plates = {a,b,c,d};
 
-        rmse(:,j) = abs(bg - avg_data.average);
-        data = [data; [ss(j), sqrt(nanmean(rmse(j).^2))]];
-        clear bg
-        sprintf('%d missing references done',ss(j)*4)
-    end
-    
-    for i = 2:length(ss)
-        ranksum(rmse(:,1),rmse(:,i),'tail','left')
-        if ranksum(rmse(:,1),rmse(:,i),'tail','left') <= 0.05
-            sprintf(['Significantly poor RMSE when %d ',...
-                'references are missing.'],ss(i)*4)
+            bground = LIHeart(plates,0);
+
+            bg = grid2row(plategen(bground{1},bground{2},bground{3},bground{4}))';
+            bg(bg == 0) = NaN;
+            bg(isnan(avg_data.average)) = NaN;
+
+            rmse{j}(:,n) = abs(bg - avg_data.average);
+
+            if ranksum(rmse{1}(:,1),rmse{j}(:,n),'tail','left') <= 0.05
+                tt = tt + 1;
+                fprintf(['Significantly poor RMSE when %d ',...
+                    'references are missing.\n'],ss(j)*4)
+%                 figure()
+%                 heatmap(cont_pos,'ColorbarVisible','off')
+%                 title(sprintf('Missing %d References',ss(j)*4))
+            end
+            clear bg
         end
+        fprintf(['Significantly poor SE %d/10 times when %d ',...
+            'references are missing at random.\n'],tt,ss(j))
+        data = [data; [ss(j), tt]];
+%         fprintf('%d missing references done!\n',ss(j)*4)
     end
 
 %%  VIRTUAL PLATE POWER ANALYSIS
