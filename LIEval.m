@@ -317,7 +317,7 @@
         p2c_info(4,:)));
      
     data = []; rmse = [];
-    ss = [0 150:20:300];
+    ss = [0 150:10:300];
     
     for j=1:length(ss)
         tt = 0;
@@ -354,6 +354,15 @@
         data = [data; [ss(j), tt]];
 %         fprintf('%d missing references done!\n',ss(j))
     end
+    
+    figure()
+    plot(data(:,1),data(:,2))
+    grid on
+    grid minor
+    xlim([min(ss(2:end)),max(ss(2:end))])
+    ylim([0,10])
+    xlabel('Number of References Missing at Random')
+    ylabel(sprintf('Significantly Lower SE (over %d times)',n))
     
 %   Upscale Pattern Specific Loss
 
@@ -430,6 +439,15 @@
         data = [data; [ss(j), tt]];
 %         fprintf('%d missing references done!\n',ss(j)*4)
     end
+    
+    figure()
+    plot(data(:,1),data(:,2))
+    grid on
+    grid minor
+    xlim([min(ss(2:end)),max(ss(2:end))])
+    ylim([0,10])
+    xlabel('Number of References Missing')
+    ylabel(sprintf('Significantly Lower SE (over %d times)',n))
 
 %%  VIRTUAL PLATE POWER ANALYSIS
  
