@@ -112,7 +112,37 @@
 %             saveas(fig,sprintf('overview%d_%d.png',iii,hours(i)))
         end
     end
+    
+%%  BACKGROUND RMSE
 
+    temp = [];
+    rmse = [];
+
+    for ii=1:length(hours)
+        cont_data = fetch(conn, sprintf(['select * from %s ',...
+            'where orf_name = ''%s'' ',...
+            'and fitness is not NULL and hours = %d'],...
+            tablename_fit,cont.name,hours(ii)));
+        for i=1:1000
+            rand_bg = datasample(cont_data.average,...
+                length(cont_data.average),...
+                'Replace',false);
+            temp = [temp, sqrt(nanmean((cont_data.average - rand_bg).^2))];
+        end
+        rmse(ii,:) = [hours(ii), mean(temp)];
+        temp = [];   
+    end
+
+    fig = figure('Renderer', 'painters', 'Position', [10 10 960 600],'visible','off');
+%     figure()
+    scatter(rmse(:,1),rmse(:,2))
+    grid on
+    grid minor
+    xlabel('Hours')
+    ylabel('RMSE')
+    title('Random Background Calling')
+    saveas(fig,'backgroundRMSE.png')
+    
 %%  POWER, FALSE POSITIVE AND ES
     
     p = 0:0.01:1;
