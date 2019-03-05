@@ -8,10 +8,13 @@
 %   Linear Interpolation to predict plate background using control colony
 %   pixel counts.
 
+%   IL = 1 : Interleave
+%   IL = 0 : No Interleave
+
 %%
 
     function data_fit = LinearInNorm(hours,n_plates,p2c_info,cont_name,...
-        tablename_p2o,tablename_jpeg)
+        tablename_p2o,tablename_jpeg,IL)
     
         connectSQL;
         
@@ -64,52 +67,8 @@
                 [a,b,c,d] = downscale(cont_avg);
                 plates = {a,b,c,d};
 
-                for i=1:4
-                    [p,q,r,s] = downscale(plates{i});
-                    [xq,yq] = ndgrid(1:32,1:48);
-
-                    if nansum(nansum(p)) ~= 0 %Top Left
-                        P = contBG(p);
-                        p = (fillmissing(fillmissing(p, 'linear',2),'linear',1) +...
-                            (fillmissing(fillmissing(p, 'linear',1),'linear',2)))/2;
-                        [x,y] = ndgrid(1:2:32,1:2:48);
-                        f = griddedInterpolant(x,y,p,'linear');
-                        plates{i} = f(xq,yq);
-                        [~,x,y,z] = downscale(plates{i});
-                        bground{i} = plategen(P,x,y,z);
-
-                    elseif nansum(nansum(q)) ~= 0 % Top Right
-                        Q = contBG(q);
-                        q = (fillmissing(fillmissing(q, 'linear',2),'linear',1) +...
-                            (fillmissing(fillmissing(q, 'linear',1),'linear',2)))/2;
-                        [x,y] = ndgrid(1:2:32,2:2:48); 
-                        f = griddedInterpolant(x,y,q,'linear');
-                        plates{i} = f(xq,yq);
-                        [x,~,y,z] = downscale(plates{i});
-                        bground{i} = plategen(x,Q,y,z);
-
-                    elseif nansum(nansum(r)) ~= 0 % Bottom Left
-                        R = contBG(r);
-                        r = (fillmissing(fillmissing(r, 'linear',2),'linear',1) +...
-                            (fillmissing(fillmissing(r, 'linear',1),'linear',2)))/2;
-                        [x,y] = ndgrid(2:2:32,1:2:48); 
-                        f = griddedInterpolant(x,y,r,'linear');
-                        plates{i} = f(xq,yq);
-                        [x,y,~,z] = downscale(plates{i});
-                        bground{i} = plategen(x,y,R,z);
-
-                    else % Bottom Right
-                        S = contBG(s);
-                        s = (fillmissing(fillmissing(s, 'linear',2),'linear',1) +...
-                            (fillmissing(fillmissing(s, 'linear',1),'linear',2)))/2;
-                        [x,y] = ndgrid(2:2:32,2:2:48); 
-                        f = griddedInterpolant(x,y,s,'linear');
-                        plates{i} = f(xq,yq);
-                        [x,y,z,~] = downscale(plates{i});
-                        bground{i} = plategen(x,y,z,S);
-
-                    end
-                end
+                bground = LIHeart(plates,IL);
+                
                 bg{iii} = grid2row(plategen(bground{1},bground{2},bground{3},bground{4}))';%.*nonzero)';
                 bg{iii}(bg{iii} == 0) = NaN;
                 temp = abs([temp; [pos.all.pos, ones(length(pos.all.pos),1)*hours(ii),...
