@@ -228,7 +228,7 @@
 %             i = i + 1;
 %         end
 
-        for ii = 1:size(cs,1)
+        for ii = 1:size(cs,1) %single picture/time point
             tmp = [cs(ii,:); cs(ii,:); cs(ii,:);...
                 cs_mean(ii,:)];
             master = [master, tmp];
@@ -278,18 +278,14 @@
 %%  Upload JPEG to NORM data
 %   Linear Interpolation based CN
 
+        IL = 1; % 1 = interleave
+
         hours = fetch(conn, sprintf(['select distinct hours from %s ',...
             'order by hours asc'], tablename_jpeg));
         hours = hours.hours;
         
         data_fit = LinearInNorm(hours,n_plates,p2c_info,cont.name,...
-            tablename_p2o,tablename_jpeg);
-
-%         data_fit = LinearInNorm6144(hours,n_plates,p2c_info,cont.name,...
-%             tablename_p2o,tablename_jpeg);
-
-%         data_fit = LinearInNormNIL(hours,n_plates,p2c_info,cont.name,...
-%             tablename_p2o,tablename_jpeg);
+            tablename_p2o,tablename_jpeg,IL);
 
         exec(conn, sprintf('drop table %s',tablename_norm));
         exec(conn, sprintf(['create table %s ( ',...
