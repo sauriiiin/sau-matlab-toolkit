@@ -27,7 +27,7 @@
     setdbprefs({'NullStringRead';'NullStringWrite';'NullNumberRead';'NullNumberWrite'},...
                   {'null';'null';'NaN';'NaN'})
 
-    expt_name = '4C2_R1';
+    expt_name = '4C2_R3';
     density = 6144;
     
 %   MySQL Table Details  
@@ -40,7 +40,7 @@
     tablename_pval      = sprintf('%s_%d_PVALUE',expt_name,density);
     tablename_res       = sprintf('%s_%d_RES',expt_name,density);
     
-    tablename_p2o       = 'VP_pos2orf_name1';
+    tablename_p2o       = 'VP_pos2orf_name3';
     tablename_bpos      = 'VP_borderpos';
     
 %   Reference Strain Name

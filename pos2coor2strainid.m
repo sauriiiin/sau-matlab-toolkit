@@ -44,11 +44,11 @@
         coor6144 = [coor6144, [ones(1,6144)*i;indices(6144)]];
     end
 
-    for i = linspace(1,2,2)             %modify this
+    for i = linspace(1,4,4)             %modify this
         coor1536 = [coor1536, [ones(1,1536)*i;indices(1536)]];
     end
 
-    for i = linspace(1,2,2)  %i = [3,5,22,19]  %modify this
+    for i = linspace(1,4,4)  %i = [3,5,22,19]  %modify this
         coor384 = [coor384, [ones(1,384)*i;indices(384)]];
     end
     
@@ -118,8 +118,8 @@
         grid2row(pos384_22), grid2row(pos384_c1)]; coor384]';
     
     exec(conn, sprintf(['create table %s (pos int not null, ',...
-        '384plate int not null,'...
-        ' 384row int not null, 384col int not null)']),tablename_p2c384);
+        '384plate int not null, '...
+        '384row int not null, 384col int not null)'],tablename_p2c384));
     datainsert(conn,tablename_p2c384,colnames_p2c384,plate384);
 
 %   plate1536 positions/plate
@@ -138,11 +138,10 @@
     
 %   plate6144 positions/plate
     pos6144_1 = plategen(pos1536_1,pos1536_2,pos1536_3,pos1536_4)+100000;
-    pos6144_2 = plategen(pos1536_1,pos1536_2,pos1536_3,pos1536_4)+200000;
+    pos6144_2 = plategen(pos1536_4,pos1536_1,pos1536_2,pos1536_3)+200000;
 %     pos6144_3 = plategen(pos1536_1,pos1536_2,pos1536_3,pos1536_4)+300000;
 %   plate6144 positions+indices/plate    
-    plate6144   = [[grid2row(pos6144_1),grid2row(pos6144_2),...
-        grid2row(pos6144_3)]; coor6144]';
+    plate6144   = [[grid2row(pos6144_1),grid2row(pos6144_2)]; coor6144]';
     
     exec(conn, sprintf(['create table %s (pos int not null,',...
         ' 6144plate int not null,'...
@@ -184,10 +183,11 @@
     datainsert(conn,tablename_p2id,colnames_p2id,strain1536);    
     
 %   plate6144 pos2strainid
-    strain6144 = plategen(strain1536_1,strain1536_2,strain1536_3,strain1536_4);
+    strain6144_1 = plategen(strain1536_1,strain1536_2,strain1536_3,strain1536_4);
+    strain6144_2 = plategen(strain1536_4,strain1536_1,strain1536_2,strain1536_3);
     
-    strain6144   = [plate6144(:,1)'; [grid2row(strain6144),...
-        grid2row(strain6144),grid2row(strain6144)]]';
+    strain6144   = [plate6144(:,1)';...
+        [grid2row(strain6144_1),grid2row(strain6144_2)]]';
     
     datainsert(conn,tablename_p2id,colnames_p2id,strain6144);
     
