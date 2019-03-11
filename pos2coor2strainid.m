@@ -109,13 +109,13 @@
 %%  POSITIONS
 
 %   plate384 positions/plate
-    pos384_03    = col2grid(linspace(1,384,384));
-    pos384_05    = col2grid(linspace(384+1,384*2,384));
-    pos384_22    = col2grid(linspace(384*2+1,384*3,384));
-    pos384_c1    = col2grid(linspace(384*3+1,384*4,384));
+    pos384_X  = col2grid(linspace(1,384,384));
+    pos384_Y  = col2grid(linspace(384+1,384*2,384));
+    pos384_Z  = col2grid(linspace(384*2+1,384*3,384));
+    pos384_C  = col2grid(linspace(384*3+1,384*4,384));
 %   plate384 positions+indices/plate
-    plate384    = [[grid2row(pos384_03), grid2row(pos384_05),...
-        grid2row(pos384_22), grid2row(pos384_c1)]; coor384]';
+    plate384  = [[grid2row(pos384_X), grid2row(pos384_Y),...
+        grid2row(pos384_Z), grid2row(pos384_C)]; coor384]';
     
     exec(conn, sprintf(['create table %s (pos int not null, ',...
         '384plate int not null, '...
@@ -123,13 +123,13 @@
     datainsert(conn,tablename_p2c384,colnames_p2c384,plate384);
 
 %   plate1536 positions/plate
-    pos1536_1 = plategen(pos384_c1,pos384_03,pos384_05,pos384_22)+10000;
-    pos1536_2 = plategen(pos384_22,pos384_c1,pos384_03,pos384_05)+20000;
-    pos1536_3 = plategen(pos384_05,pos384_22,pos384_c1,pos384_03)+30000;
-    pos1536_4 = plategen(pos384_03,pos384_05,pos384_22,pos384_c1)+40000;
+    pos1536_K = plategen(pos384_C,pos384_X,pos384_Y,pos384_Z)+10000;
+    pos1536_L = plategen(pos384_Z,pos384_C,pos384_X,pos384_Y)+20000;
+    pos1536_M = plategen(pos384_Y,pos384_Z,pos384_C,pos384_X)+30000;
+    pos1536_N = plategen(pos384_X,pos384_Y,pos384_Z,pos384_C)+40000;
 %   plate1536 positions+indices/plate    
-    plate1536   = [[grid2row(pos1536_1), grid2row(pos1536_2),...
-        grid2row(pos1536_3), grid2row(pos1536_4)]; coor1536]';    
+    plate1536 = [[grid2row(pos1536_K), grid2row(pos1536_L),...
+        grid2row(pos1536_M), grid2row(pos1536_N)]; coor1536]';    
     
     exec(conn, sprintf(['create table %s (pos int not null, ',...
         '1536plate int not null, '...
@@ -137,11 +137,11 @@
     datainsert(conn,tablename_p2c1536,colnames_p2c1536,plate1536);    
     
 %   plate6144 positions/plate
-    pos6144_1 = plategen(pos1536_1,pos1536_2,pos1536_3,pos1536_4)+100000;
-    pos6144_2 = plategen(pos1536_4,pos1536_1,pos1536_2,pos1536_3)+200000;
-%     pos6144_3 = plategen(pos1536_1,pos1536_2,pos1536_3,pos1536_4)+300000;
+    pos6144_P = plategen(pos1536_K,pos1536_L,pos1536_M,pos1536_N)+100000;
+    pos6144_Q = plategen(pos1536_N,pos1536_K,pos1536_L,pos1536_M)+200000;
+%     pos6144_M = plategen(pos1536_K,pos1536_L,pos1536_M,pos1536_N)+300000;
 %   plate6144 positions+indices/plate    
-    plate6144   = [[grid2row(pos6144_1),grid2row(pos6144_2)]; coor6144]';
+    plate6144 = [[grid2row(pos6144_P),grid2row(pos6144_Q)]; coor6144]';
     
     exec(conn, sprintf(['create table %s (pos int not null,',...
         ' 6144plate int not null,'...
@@ -151,43 +151,43 @@
 %%  CALCULATING STRAINS FOR POS2STRAIN_ID TABLES
 
 %   plate384 pos2strainid
-    strain384_3    = fetch(conn, sprintf(['select strain_id from %s',...
+    strain384_X    = fetch(conn, sprintf(['select strain_id from %s',...
         ' where pos between 1 and 384',...
         ' order by pos asc'],tablename_p2id));
-    strain384_3 = col2grid(strain384_3.strain_id);
+    strain384_X = col2grid(strain384_X.strain_id);
 
-    strain384_5    = fetch(conn, sprintf(['select strain_id from %s',...
+    strain384_Y    = fetch(conn, sprintf(['select strain_id from %s',...
         ' where pos between 385 and 384*2',...
         ' order by pos asc'],tablename_p2id));
-    strain384_5    = col2grid(strain384_5.strain_id);
+    strain384_Y    = col2grid(strain384_Y.strain_id);
     
-    strain384_22    = fetch(conn, sprintf(['select strain_id from %s',...
+    strain384_Z    = fetch(conn, sprintf(['select strain_id from %s',...
         ' where pos between 384*2+1 and 384*3',...
         ' order by pos asc'],tablename_p2id));
-    strain384_22   = col2grid(strain384_22.strain_id);
+    strain384_Z   = col2grid(strain384_Z.strain_id);
 
-    strain384_c    = fetch(conn, sprintf(['select strain_id from %s',...
+    strain384_C    = fetch(conn, sprintf(['select strain_id from %s',...
         ' where pos between 384*3+1 and 384*4',...
         ' order by pos asc'],tablename_p2id));
-    strain384_c    = col2grid(strain384_c.strain_id);
+    strain384_C    = col2grid(strain384_C.strain_id);
 
 %   plate1536 pos2strainid
-    strain1536_1 = plategen(strain384_c,strain384_3,strain384_5,strain384_22);
-    strain1536_2 = plategen(strain384_22,strain384_c,strain384_3,strain384_5);
-    strain1536_3 = plategen(strain384_5,strain384_22,strain384_c,strain384_3);
-    strain1536_4 = plategen(strain384_3,strain384_5,strain384_22,strain384_c);
+    strain1536_K = plategen(strain384_C,strain384_X,strain384_Y,strain384_Z);
+    strain1536_L = plategen(strain384_Z,strain384_C,strain384_X,strain384_Y);
+    strain1536_M = plategen(strain384_Y,strain384_Z,strain384_C,strain384_X);
+    strain1536_N = plategen(strain384_X,strain384_Y,strain384_Z,strain384_C);
     
-    strain1536   = [plate1536(:,1)';[grid2row(strain1536_1), grid2row(strain1536_2),...
-        grid2row(strain1536_3), grid2row(strain1536_4)]]';    
+    strain1536   = [plate1536(:,1)';[grid2row(strain1536_K), grid2row(strain1536_L),...
+        grid2row(strain1536_M), grid2row(strain1536_N)]]';    
     
     datainsert(conn,tablename_p2id,colnames_p2id,strain1536);    
     
 %   plate6144 pos2strainid
-    strain6144_1 = plategen(strain1536_1,strain1536_2,strain1536_3,strain1536_4);
-    strain6144_2 = plategen(strain1536_4,strain1536_1,strain1536_2,strain1536_3);
+    strain6144_P = plategen(strain1536_K,strain1536_L,strain1536_M,strain1536_N);
+    strain6144_Q = plategen(strain1536_N,strain1536_K,strain1536_L,strain1536_M);
     
     strain6144   = [plate6144(:,1)';...
-        [grid2row(strain6144_1),grid2row(strain6144_2)]]';
+        [grid2row(strain6144_P),grid2row(strain6144_Q)]]';
     
     datainsert(conn,tablename_p2id,colnames_p2id,strain6144);
     
