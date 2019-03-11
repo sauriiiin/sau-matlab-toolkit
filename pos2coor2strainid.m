@@ -23,8 +23,8 @@
     
     tablename_p2id      = sprintf('%s_pos2strainid',expt_name);
     colnames_p2id       = {'pos','strain_id'};
-    tablename_p2c96    = sprintf('%s_pos2coor96',expt_name);
-    colnames_p2c96     = {'pos','96plate','96row','96col'};
+    tablename_p2c96     = sprintf('%s_pos2coor96',expt_name);
+    colnames_p2c96      = {'pos','96plate','96row','96col'};
     tablename_p2c384    = sprintf('%s_pos2coor384',expt_name);
     colnames_p2c384     = {'pos','384plate','384row','384col'};
     tablename_p2c1536   = sprintf('%s_pos2coor1536',expt_name);
@@ -37,8 +37,8 @@
 
     coor6144 = [];
     coor1536 = [];
-    coor384 = [];
-    coor96 = [];
+    coor384  = [];
+    coor96   = [];
 
     for i = linspace(1,2,2)             %modify this
         coor6144 = [coor6144, [ones(1,6144)*i;indices(6144)]];
