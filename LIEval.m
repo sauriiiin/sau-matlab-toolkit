@@ -73,6 +73,10 @@
             'order by hours asc'], tablename_jpeg));
     hours = hours.hours;
     
+%%  DETECT PLATE EFFECT
+%     plateeffect.m
+%   need to convert it into function
+
 %%  PLATEWISE RMSE
 
     for i = 1:length(hours)
