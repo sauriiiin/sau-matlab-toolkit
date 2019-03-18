@@ -27,7 +27,7 @@
     setdbprefs({'NullStringRead';'NullStringWrite';'NullNumberRead';'NullNumberWrite'},...
                   {'null';'null';'NaN';'NaN'})
 
-    expt_name = '4C3_GA_NIL';
+    expt_name = '4C3_GL';
     density = 6144;
     
 %   MySQL Table Details  
@@ -98,8 +98,8 @@
             max_avg = max(bg.average);
             min_avg = min(bg.average);
 
-%             fig = figure('Renderer', 'painters', 'Position', [10 10 1920 1200],'visible','off');
-            figure()
+            fig = figure('Renderer', 'painters', 'Position', [10 10 1920 1200],'visible','off');
+%             figure()
             subplot(2,2,1)
             heatmap(col2grid(bg.average),'ColorLimits',[min_avg max_avg]);
             title(sprintf('Observed Pixel Count\n(Plate %d, %d hr)',iii,hours(i)))
@@ -115,7 +115,7 @@
             heatmap(col2grid(abs(bg.average - bg.bg)),'ColorLimits',[0 120]);
             title(sprintf('RMSE (%0.3f)',sqrt(nanmean(rmse(:,iii)))))
             colormap parula
-%             saveas(fig,sprintf('overview%d_%d.png',iii,hours(i)))
+            saveas(fig,sprintf('%s_OVW_%d_%d.png',expt_name,hours(i),iii))
         end
     end
     
