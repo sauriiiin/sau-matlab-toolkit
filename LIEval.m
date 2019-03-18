@@ -27,7 +27,7 @@
     setdbprefs({'NullStringRead';'NullStringWrite';'NullNumberRead';'NullNumberWrite'},...
                   {'null';'null';'NaN';'NaN'})
 
-    expt_name = '4C3_GA';
+    expt_name = '4C3_GA_NIL';
     density = 6144;
     
 %   MySQL Table Details  
@@ -70,7 +70,7 @@
         p2c_info(2,:)));
     
     hours = fetch(conn, sprintf(['select distinct hours from %s ',...
-            'order by hours asc'], tablename_jpeg));
+            'order by hours asc'], tablename_fit));
     hours = hours.hours;
     
 %%  DETECT PLATE EFFECT
