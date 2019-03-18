@@ -58,18 +58,12 @@
 
         %%  CALCULATE BACKGROUND
 
-%                 all_avg  = col2grid(avg_data.average);
-%                 nonzero  = all_avg > 0;
                 cont_pos = col2grid(ismember(pos.all.pos, pos.cont.pos));
                 cont_avg = col2grid(avg_data.average).*cont_pos;
 
                 cont_avg(cont_avg == 0) = NaN;
-                [a,b,c,d] = downscale(cont_avg);
-                plates = {a,b,c,d};
 
-                bground = LIHeart(plates,IL);
-                
-                bg{iii} = grid2row(plategen(bground{1},bground{2},bground{3},bground{4}))';%.*nonzero)';
+                bg{iii} = LIHeart(cont_avg,cont_pos,IL);
                 bg{iii}(bg{iii} == 0) = NaN;
                 temp = abs([temp; [pos.all.pos, ones(length(pos.all.pos),1)*hours(ii),...
                     bg{iii}, avg_data.average, avg_data.average./bg{iii}]]);
