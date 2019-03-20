@@ -377,7 +377,7 @@ else
     tempY=1;
 end
 
-for ii=unique(xx)';
+for ii=unique(xx)'
     I = xx==(ii);
     fI = find(I)';
     push = -(length(fI)-1)/2; % so it will be centered if there is only one.
