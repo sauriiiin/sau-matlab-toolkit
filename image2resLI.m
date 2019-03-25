@@ -421,7 +421,6 @@
             
             datainsert(conn,tablename_pval,colnames_pval,pdata{iii})
         end
-
         
     end
     
