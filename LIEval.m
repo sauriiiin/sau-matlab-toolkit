@@ -582,7 +582,8 @@
 %   4C3_GA1
 
     out_path = '/Users/saur1n/Desktop/4C3/Analysis/GA/S1Analysis/props/techrep/';
-
+    expt_name = '4C3_GA1';
+        
     p = 0:0.01:1;
     fp = [];
 
@@ -601,7 +602,8 @@
         grid minor
         xlabel('P Value Cut-offs')
         ylabel('False Positive')
-        title(sprintf('FP vs P Val (time = %d hrs)',hours(ii)))
+        title(sprintf('4C3 FS1 | FP vs P Val\nTime = %d hrs | FP = %0.2f%%',...
+            hours(ii),fp{ii}(6)*100))
         saveas(fig,sprintf('%s%s_TECH_FP_%d.png',...
                 out_path,expt_name,hours(ii)))
     end
