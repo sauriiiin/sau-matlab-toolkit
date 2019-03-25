@@ -577,3 +577,32 @@
 %     datainsert(conn, '4C2_R2R2N_RMSE',...
 %         {'hours','R2_rmse','R2N_rmse','p_right','p_left'},better2n);
 
+
+%%  FALSE POSITIVES WHEN CONSIDERING TECHNICAL REPLICATES
+%   4C3_GA1
+
+    out_path = '/Users/saur1n/Desktop/4C3/Analysis/GA/S1Analysis/props/techrep/';
+
+    p = 0:0.01:1;
+    fp = [];
+
+    for ii = 1:length(hours)
+        for i = 1:length(p)
+           temp = fetch(conn, sprintf(['select count(*) from 4C3_GA1_6144_PVALUE ',...
+               'where hours = %d and p <= %0.2f'],hours(ii),p(i)));
+           fp{ii}(i) = temp.count____1/914;
+        end
+        fig = figure('Renderer', 'painters', 'Position', [10 10 1000 1000],'visible','off');
+%         figure()
+        plot(p,fp{ii},'b','Linewidth',3)
+        hold on
+        plot(p,p,'r--','Linewidth',3)
+        grid on
+        grid minor
+        xlabel('P Value Cut-offs')
+        ylabel('False Positive')
+        title(sprintf('FP vs P Val (time = %d hrs)',hours(ii)))
+        saveas(fig,sprintf('%s%s_TECH_FP_%d.png',...
+                out_path,expt_name,hours(ii)))
+    end
+
