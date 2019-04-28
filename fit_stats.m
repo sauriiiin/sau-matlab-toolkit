@@ -27,10 +27,12 @@
             inc.t=1;
             for ii = 1 : (size(fit_dat.orf_name, 1))-1
                 if(strcmpi(fit_dat.orf_name{ii, 1},fit_dat.orf_name{ii+1, 1})==1)
-                    temp(1, inc.t) = fit_dat.fitness(ii, 1);
+%                     temp(1, inc.t) = fit_dat.fitness(ii, 1);
+                    temp(1, inc.t) = rmoutlier(fit_dat.fitness(ii, 1));
                     inc.t=inc.t+1;
                     if (ii == size(fit_dat.orf_name, 1)-1)
-                        temp(1, inc.t) = fit_dat.fitness(ii+1, 1);
+%                         temp(1, inc.t) = fit_dat.fitness(ii+1, 1);
+                        temp(1, inc.t) = rmoutliers(fit_dat.fitness(ii+1, 1));
                         data.orf_name{inc.tt, 1} = fit_dat.orf_name{ii, 1};
                         data.hours(inc.tt, 1) = fit_dat.hours(ii, 1);
                         data.N(inc.tt, 1) = length(temp);
@@ -40,7 +42,8 @@
                         inc.tt=inc.tt+1;
                     end
                 else
-                    temp(1, inc.t) = fit_dat.fitness(ii, 1);
+%                     temp(1, inc.t) = fit_dat.fitness(ii, 1);
+                    temp(1, inc.t) = rmoutliers(fit_dat.fitness(ii, 1));
                     data.orf_name{inc.tt, 1} = fit_dat.orf_name{ii, 1};
                     data.hours(inc.tt, 1) = fit_dat.hours(ii, 1);
                     data.N(inc.tt, 1) = length(temp);
