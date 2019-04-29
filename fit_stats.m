@@ -27,29 +27,26 @@
             inc.t=1;
             for ii = 1 : (size(fit_dat.orf_name, 1))-1
                 if(strcmpi(fit_dat.orf_name{ii, 1},fit_dat.orf_name{ii+1, 1})==1)
-%                     temp(1, inc.t) = fit_dat.fitness(ii, 1);
-                    temp(1, inc.t) = rmoutlier(fit_dat.fitness(ii, 1));
+                    temp(1, inc.t) = fit_dat.fitness(ii, 1);
                     inc.t=inc.t+1;
                     if (ii == size(fit_dat.orf_name, 1)-1)
-%                         temp(1, inc.t) = fit_dat.fitness(ii+1, 1);
-                        temp(1, inc.t) = rmoutliers(fit_dat.fitness(ii+1, 1));
+                        temp(1, inc.t) = fit_dat.fitness(ii+1, 1);
                         data.orf_name{inc.tt, 1} = fit_dat.orf_name{ii, 1};
                         data.hours(inc.tt, 1) = fit_dat.hours(ii, 1);
-                        data.N(inc.tt, 1) = length(temp);
-                        data.cs_mean(inc.tt, 1) = nanmean(temp);
-                        data.cs_median(inc.tt, 1) = nanmedian(temp);
-                        data.cs_std(inc.tt, 1) = nanstd(temp);
+                        data.N(inc.tt, 1) = length(temp(~isoutlier(temp)));
+                        data.cs_mean(inc.tt, 1) = nanmean(temp(~isoutlier(temp)));
+                        data.cs_median(inc.tt, 1) = nanmedian(temp(~isoutlier(temp)));
+                        data.cs_std(inc.tt, 1) = nanstd(temp(~isoutlier(temp)));
                         inc.tt=inc.tt+1;
                     end
                 else
-%                     temp(1, inc.t) = fit_dat.fitness(ii, 1);
-                    temp(1, inc.t) = rmoutliers(fit_dat.fitness(ii, 1));
+                    temp(1, inc.t) = fit_dat.fitness(ii, 1);
                     data.orf_name{inc.tt, 1} = fit_dat.orf_name{ii, 1};
                     data.hours(inc.tt, 1) = fit_dat.hours(ii, 1);
-                    data.N(inc.tt, 1) = length(temp);
-                    data.cs_mean(inc.tt, 1) = nanmean(temp);
-                    data.cs_median(inc.tt, 1) = nanmedian(temp);
-                    data.cs_std(inc.tt, 1) = nanstd(temp);
+                    data.N(inc.tt, 1) = length(temp(~isoutlier(temp)));
+                    data.cs_mean(inc.tt, 1) = nanmean(temp(~isoutlier(temp)));
+                    data.cs_median(inc.tt, 1) = nanmedian(temp(~isoutlier(temp)));
+                    data.cs_std(inc.tt, 1) = nanstd(temp(~isoutlier(temp)));
                     clear temp;
                     inc.t=1;
                     inc.tt=inc.tt+1;

@@ -51,11 +51,12 @@
 %         'SQL Database Name',1,...
 %         {'database'}));
 
-    prompt={'Enter a name for your experiment:'};
-    name='expt_name';
-    numlines=1;
-    defaultanswer={'test'};
-    expt_name = char(inputdlg(prompt,name,numlines,defaultanswer));
+%     prompt={'Enter a name for your experiment:'};
+%     name='expt_name';
+%     numlines=1;
+%     defaultanswer={'test'};
+%     expt_name = char(inputdlg(prompt,name,numlines,defaultanswer));
+    expt_name = '4C3_GA1';
   
 %   Set Precision
 %     digits(6);
@@ -360,27 +361,32 @@
         exec(conn, sprintf('drop table %s',tablename_pval));
         exec(conn, sprintf(['create table %s (orf_name varchar(255) null,'...
             'hours int not null, p double null, stat double null)'],tablename_pval));
-
         colnames_pval = {'orf_name','hours','p','stat'};
+        
+        contpos = fetch(conn, sprintf(['select pos from %s ',...
+            'where orf_name = ''%s'' and pos < 10000 ',...
+            'and pos not in ',...
+            '(select pos from %s)'],...
+            tablename_p2o,cont.name,tablename_bpos));
+        contpos = contpos.pos + [110000,120000,130000,140000,...
+            210000,220000,230000,240000];
 
         for iii = 1:length(hours)
-            contpos = fetch(conn, sprintf(['select pos from %s ',...
-                'where orf_name = ''%s'' and pos < 10000'],...
-                tablename_p2o,cont.name));
-            contpos = contpos.pos + [110000,120000,130000,140000,...
-                210000,220000,230000,240000];
-
             contfit = [];
             for ii = 1:length(contpos)
                 temp = fetch(conn, sprintf(['select fitness from %s ',...
                     'where hours = %d and pos in (%s) ',...
                     'and fitness is not null'],tablename_fit,hours(iii),...
                     sprintf('%d,%d,%d,%d,%d,%d,%d,%d',contpos(ii,:))));
-                if nansum(temp.fitness) > 0
-                    contfit = [contfit, nanmean(temp.fitness)];
+                if isstruct(temp) ~= 0
+                    if nansum(temp.fitness) > 0
+%                             contfit = [contfit, nanmean(temp.fitness)];
+                        outlier = isoutlier(temp.fitness);
+                        temp.fitness(outlier) = NaN;
+                        contfit = [contfit, nanmean(temp.fitness)];
+                    end
                 end
             end
-
             contmean = nanmean(contfit);
             contstd = nanstd(contfit);
 
@@ -391,7 +397,6 @@
 
             m = contfit';
             tt = length(m);
-
             pvals = [];
             stat = [];
             for i = 1:length(orffit.orf_name)
