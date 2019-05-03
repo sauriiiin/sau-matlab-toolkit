@@ -56,7 +56,7 @@
 %     numlines=1;
 %     defaultanswer={'test'};
 %     expt_name = char(inputdlg(prompt,name,numlines,defaultanswer));
-    expt_name = 'PT2R_PGAL_LID';
+    expt_name = 'PT2RR_PGAL_LID';
   
 %   Set Precision
 %     digits(6);
@@ -131,7 +131,7 @@
 %     p2c_info = char(inputdlg(prompt,...
 %         name,1,defaultanswers));
     
-    p2c_info(1,:) = '4C3_pos2coor6144';
+    p2c_info(1,:) = 'PT2_pos2coor6144';
     p2c_info(2,:) = '6144plate       ';
     p2c_info(3,:) = '6144col         ';
     p2c_info(4,:) = '6144row         ';
@@ -378,14 +378,14 @@
                     'where hours = %d and pos in (%s) ',...
                     'and fitness is not null'],tablename_fit,hours(iii),...
                     sprintf('%d,%d,%d,%d,%d,%d,%d,%d',contpos(ii,:))));
-                if isstruct(temp) ~= 0
+%                 if isstruct(temp) ~= 0
                     if nansum(temp.fitness) > 0
 %                             contfit = [contfit, nanmean(temp.fitness)];
                         outlier = isoutlier(temp.fitness);
                         temp.fitness(outlier) = NaN;
                         contfit = [contfit, nanmean(temp.fitness)];
                     end
-                end
+%                 end
             end
             contmean = nanmean(contfit);
             contstd = nanstd(contfit);
@@ -421,7 +421,8 @@
             pdata{iii}.stat = num2cell(stat);
             pdata{iii}.stat(cellfun(@isnan,pdata{iii}.stat)) = {[]};
             
-            datainsert(conn,tablename_pval,colnames_pval,pdata{iii})
+%             datainsert(conn,tablename_pval,colnames_pval,pdata{iii})
+            sqlwrite(conn,tablename_pval,struct2table(pdata{iii}));
         end
         
     end
