@@ -599,21 +599,21 @@
            fp{ii}(i) = temp.count____1/total.count_distinctOrf_name__1;
         end
         
-        pfit = fit(fp{ii}',p','smoothingspline');
-        p5 = [p5, pfit(0.05)];
+%         pfit = fit(fp{ii}',p','smoothingspline');
+%         p5 = [p5, pfit(0.05)];
         
 %         fig = figure('Renderer', 'painters', 'Position', [10 10 1000 1000],'visible','off');
-% %         figure()
-%         plot(p,fp{ii},'b','Linewidth',3)
-%         hold on
+        figure()
+        plot(p,fp{ii},'b','Linewidth',3)
+        hold on
 %         plot(pfit(fp{ii}),fp{ii},'g','Linewidth',3)
-%         plot(p,p,'r--','Linewidth',3)
-%         grid on
-%         grid minor
-%         xlabel('P Value Cut-offs')
-%         ylabel('False Positive')
-%         title(sprintf('4C3 FS1-1 | FP vs P Val\nTime = %d hrs | FP = %0.2f%%',...
-%             hours(ii),fp{ii}(6)*100))
+        plot(p,p,'r--','Linewidth',3)
+        grid on
+        grid minor
+        xlabel('P Value Cut-offs')
+        ylabel('False Positive')
+        title(sprintf('4C3 FS1-1 | FP vs P Val\nTime = %d hrs | FP = %0.2f%%',...
+            hours(ii),fp{ii}(6)*100))
 %         saveas(fig,sprintf('%s%s_TECH_FP2_%d.png',...
 %                 out_path,expt_name,hours(ii)))
     end
