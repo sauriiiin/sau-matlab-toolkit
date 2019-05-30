@@ -378,13 +378,12 @@
                     'where hours = %d and pos in (%s) ',...
                     'and fitness is not null'],tablename_fit,hours(iii),...
                     sprintf('%d,%d,%d,%d,%d,%d,%d,%d',contpos(ii,:))));
-                if isstruct(temp) ~= 0
-                    if nansum(temp.fitness) > 0
+                
+                if nansum(temp.fitness) > 0
 %                             contfit = [contfit, nanmean(temp.fitness)];
-                        outlier = isoutlier(temp.fitness);
-                        temp.fitness(outlier) = NaN;
-                        contfit = [contfit, nanmean(temp.fitness)];
-                    end
+                    outlier = isoutlier(temp.fitness);
+                    temp.fitness(outlier) = NaN;
+                    contfit = [contfit, nanmean(temp.fitness)];
                 end
             end
             contmean = nanmean(contfit);
