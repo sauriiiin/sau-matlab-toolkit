@@ -56,7 +56,7 @@
 %     numlines=1;
 %     defaultanswer={'test'};
 %     expt_name = char(inputdlg(prompt,name,numlines,defaultanswer));
-    expt_name = '4C3_GA1';
+    expt_name = 'PT2RR_PGAL_LID';
   
 %   Set Precision
 %     digits(6);
@@ -131,7 +131,7 @@
 %     p2c_info = char(inputdlg(prompt,...
 %         name,1,defaultanswers));
     
-    p2c_info(1,:) = '4C3_pos2coor6144';
+    p2c_info(1,:) = 'PT2_pos2coor6144';
     p2c_info(2,:) = '6144plate       ';
     p2c_info(3,:) = '6144col         ';
     p2c_info(4,:) = '6144row         ';
@@ -420,7 +420,8 @@
             pdata{iii}.stat = num2cell(stat);
             pdata{iii}.stat(cellfun(@isnan,pdata{iii}.stat)) = {[]};
             
-            datainsert(conn,tablename_pval,colnames_pval,pdata{iii})
+%             datainsert(conn,tablename_pval,colnames_pval,pdata{iii})
+            sqlwrite(conn,tablename_pval,struct2table(pdata{iii}));
         end
         
     end
