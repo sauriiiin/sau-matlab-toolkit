@@ -18,16 +18,16 @@
 
 %%  Load Paths to Files and Data
 
-    col_analyzer_path = '/Users/saur1n/Documents/GitHub/Matlab-Colony-Analyzer-Toolkit';
-    bean_toolkit_path = '/Users/saur1n/Documents/GitHub/bean-matlab-toolkit';
-    sau_toolkit_path = '/Users/saur1n/Documents/GitHub/sau-matlab-toolkit';
-    addpath(genpath(col_analyzer_path));
-    addpath(genpath(bean_toolkit_path));
-    addpath(genpath(sau_toolkit_path));
-%     javaaddpath(uigetfile());
+    cd /home/sbp29/MATLAB
 
-%%  Add MCA toolkit to Path
-    add_mca_toolkit_to_path
+        addpath(genpath('/home/sbp29/MATLAB/Matlab-Colony-Analyzer-Toolkit'))
+        addpath(genpath('/home/sbp29/MATLAB/bean-matlab-toolkit'))
+        addpath(genpath('/home/sbp29/MATLAB/sau-matlab-toolkit'))
+        addpath(genpath('/home/sbp29/MATLAB/sau-matlab-toolkit/grid-manipulation'))
+        addpath(genpath('/home/sbp29/MATLAB/paris'))
+        addpath(genpath('/home/sbp29/MATLAB/development'))
+
+    javaaddpath('/home/sbp29/MATLAB/mysql-connector-java-8.0.16.jar');
 
 %%  Initialization
 
@@ -56,7 +56,7 @@
 %     numlines=1;
 %     defaultanswer={'test'};
 %     expt_name = char(inputdlg(prompt,name,numlines,defaultanswer));
-    expt_name = 'PT2RR_PGAL_LID';
+    expt_name = '4C3_GA1_MC_BOR';
   
 %   Set Precision
 %     digits(6);
@@ -131,7 +131,7 @@
 %     p2c_info = char(inputdlg(prompt,...
 %         name,1,defaultanswers));
     
-    p2c_info(1,:) = 'PT2_pos2coor6144';
+    p2c_info(1,:) = '4C3_pos2coor6144';
     p2c_info(2,:) = '6144plate       ';
     p2c_info(3,:) = '6144col         ';
     p2c_info(4,:) = '6144row         ';
@@ -149,10 +149,12 @@
         p2c_info(1,:),...
         p2c_info(2,:)));
     
-    prompt={'Enter the name of your pos2orf_name table:'};
-    tablename_p2o = char(inputdlg(prompt,...
-        'pos2orf_name Table Name',1,...
-        {'expt_pos2orf_name'}));
+%     prompt={'Enter the name of your pos2orf_name table:'};
+%     tablename_p2o = char(inputdlg(prompt,...
+%         'pos2orf_name Table Name',1,...
+%         {'expt_pos2orf_name'}));
+    
+    tablename_p2o       = '4C3_pos2orf_name1';
     
 %     prompt={'Enter the number of replicates in this study:'};
 %     replicate = str2num(cell2mat(inputdlg(prompt,...
@@ -169,20 +171,26 @@
 %             'order by a.pos asc'],tablename_null));
 %     end
     
-    prompt={'Enter the control stain orf_name:'};
-    cont.name = char(inputdlg(prompt,...
-        'Control Strain',1,...
-        {'BF_control'}));
+%     prompt={'Enter the control stain orf_name:'};
+%     cont.name = char(inputdlg(prompt,...
+%         'Control Strain',1,...
+%         {'BF_control'}));
+
+    cont.name = 'BF_control';
+%     
+%     prompt={'Enter the Border Position Table Name:'};
+%     tablename_bpos = char(inputdlg(prompt,...
+%         'Border Positions',1,...
+%         {'expt_borderpos'}));
+
+    tablename_bpos = '4C3_borderpos';
     
-    prompt={'Enter the Border Position Table Name:'};
-    tablename_bpos = char(inputdlg(prompt,...
-        'Border Positions',1,...
-        {'expt_borderpos'}));
-    
-    prompt={'Enter the Smudge Box Table Name:'};
-    tablename_sbox = char(inputdlg(prompt,...
-        'Smudge Box',1,...
-        {'expt_smudgebox'}));
+%     prompt={'Enter the Smudge Box Table Name:'};
+%     tablename_sbox = char(inputdlg(prompt,...
+%         'Smudge Box',1,...
+%         {'expt_smudgebox'}));
+
+    tablename_sbox = '4C3_smudgebox';
     
 %   Fetch Protogenes
 
