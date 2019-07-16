@@ -56,7 +56,7 @@
 %     numlines=1;
 %     defaultanswer={'test'};
 %     expt_name = char(inputdlg(prompt,name,numlines,defaultanswer));
-    expt_name = '4C3_GA1_BEAN';
+    expt_name = '4C3_GA1_RND_BEAN';
   
 %   Set Precision
 %     digits(6);
@@ -199,9 +199,34 @@
     
     close(conn);
     
-%% 
+%%  Upload JPEG to NORM data
+%   Linear Interpolation based CN
 
+        hours = fetch(conn, sprintf(['select distinct hours from %s ',...
+            'order by hours asc'], tablename_jpeg));
+        hours = hours.hours;
+        
+        data_fit = beanNorm(hours,n_plates,p2c_info,tablename_jpeg);
 
+        exec(conn, sprintf('drop table %s',tablename_norm));
+        exec(conn, sprintf(['create table %s ( ',...
+                    'pos int(11) not NULL, ',...
+                    'hours int(11) not NULL, ',...
+                    'bg double default NULL, ',...
+                    'average double default NULL, ',...
+                    'fitness double default NULL ',...
+                    ')'],tablename_norm));
+        for i=1:length(hours)
+            datainsert(conn, tablename_norm,...
+                {'pos','hours','bg','average','fitness'},data_fit{i});
+        end
+
+        exec(conn, sprintf('drop table %s',tablename_fit)); 
+        exec(conn, sprintf(['create table %s ',...
+            '(select b.orf_name, a.pos, a.hours, a.bg, a.average, a.fitness ',...
+            'from %s a, %s b ',...
+            'where a.pos = b.pos ',...
+            'order by a.pos asc)'],tablename_fit,tablename_norm,tablename_p2o));
 
 
 

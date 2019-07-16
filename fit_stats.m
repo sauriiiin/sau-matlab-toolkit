@@ -37,6 +37,10 @@
                         data.cs_mean(inc.tt, 1) = nanmean(temp(~isoutlier(temp)));
                         data.cs_median(inc.tt, 1) = nanmedian(temp(~isoutlier(temp)));
                         data.cs_std(inc.tt, 1) = nanstd(temp(~isoutlier(temp)));
+%                         data.N(inc.tt, 1) = length(temp);
+%                         data.cs_mean(inc.tt, 1) = nanmean(temp);
+%                         data.cs_median(inc.tt, 1) = nanmedian(temp);
+%                         data.cs_std(inc.tt, 1) = nanstd(temp);
                         inc.tt=inc.tt+1;
                     end
                 else
@@ -47,6 +51,10 @@
                     data.cs_mean(inc.tt, 1) = nanmean(temp(~isoutlier(temp)));
                     data.cs_median(inc.tt, 1) = nanmedian(temp(~isoutlier(temp)));
                     data.cs_std(inc.tt, 1) = nanstd(temp(~isoutlier(temp)));
+%                     data.N(inc.tt, 1) = length(temp);
+%                     data.cs_mean(inc.tt, 1) = nanmean(temp);
+%                     data.cs_median(inc.tt, 1) = nanmedian(temp);
+%                     data.cs_std(inc.tt, 1) = nanstd(temp);
                     clear temp;
                     inc.t=1;
                     inc.tt=inc.tt+1;

@@ -63,7 +63,8 @@
 
                 cont_avg(cont_avg == 0) = NaN;
 
-                bg{iii} = LIHeart(cont_avg,cont_pos,IL);
+%                 bg{iii} = LIHeart(cont_avg,cont_pos,IL);
+                bg{iii} = LIHeart96(cont_avg,cont_pos,IL);
                 bg{iii}(bg{iii} == 0) = NaN;
                 temp = abs([temp; [pos.all.pos, ones(length(pos.all.pos),1)*hours(ii),...
                     bg{iii}, avg_data.average, avg_data.average./bg{iii}]]);

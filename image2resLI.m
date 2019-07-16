@@ -20,12 +20,12 @@
 
     cd /home/sbp29/MATLAB
 
-        addpath(genpath('/home/sbp29/MATLAB/Matlab-Colony-Analyzer-Toolkit'))
-        addpath(genpath('/home/sbp29/MATLAB/bean-matlab-toolkit'))
-        addpath(genpath('/home/sbp29/MATLAB/sau-matlab-toolkit'))
-        addpath(genpath('/home/sbp29/MATLAB/sau-matlab-toolkit/grid-manipulation'))
-        addpath(genpath('/home/sbp29/MATLAB/paris'))
-        addpath(genpath('/home/sbp29/MATLAB/development'))
+    addpath(genpath('/home/sbp29/MATLAB/Matlab-Colony-Analyzer-Toolkit'))
+    addpath(genpath('/home/sbp29/MATLAB/bean-matlab-toolkit'))
+    addpath(genpath('/home/sbp29/MATLAB/sau-matlab-toolkit'))
+    addpath(genpath('/home/sbp29/MATLAB/sau-matlab-toolkit/grid-manipulation'))
+    addpath(genpath('/home/sbp29/MATLAB/paris'))
+    addpath(genpath('/home/sbp29/MATLAB/development'))
 
     javaaddpath('/home/sbp29/MATLAB/mysql-connector-java-8.0.16.jar');
 
@@ -56,7 +56,7 @@
 %     numlines=1;
 %     defaultanswer={'test'};
 %     expt_name = char(inputdlg(prompt,name,numlines,defaultanswer));
-    expt_name = '4C3_GA1_MC_BOR';
+    expt_name = '4C3_96R';
   
 %   Set Precision
 %     digits(6);
@@ -98,15 +98,15 @@
             dimensions = [8 12];
     end
     
-    if density == 96
-        poslim = [0,1000];
-    elseif density == 384
-        poslim = [1000,10000];
-    elseif density == 1536
-        poslim = [10000,100000];
-    else %density == 6144
-        poslim = [100000,1000000];
-    end
+%     if density == 96
+%         poslim = [0,1000];
+%     elseif density == 384
+%         poslim = [1000,10000];
+%     elseif density == 1536
+%         poslim = [10000,100000];
+%     else %density == 6144
+%         poslim = [100000,1000000];
+%     end
     
 %   MySQL Table Details  
     
@@ -131,10 +131,10 @@
 %     p2c_info = char(inputdlg(prompt,...
 %         name,1,defaultanswers));
     
-    p2c_info(1,:) = '4C3_pos2coor6144';
-    p2c_info(2,:) = '6144plate       ';
-    p2c_info(3,:) = '6144col         ';
-    p2c_info(4,:) = '6144row         ';
+    p2c_info(1,:) = '4C3_96R_pos2coor6144';
+    p2c_info(2,:) = '6144plate           ';
+    p2c_info(3,:) = '6144col             ';
+    p2c_info(4,:) = '6144row             ';
 
     p2c = fetch(conn, sprintf(['select * from %s a ',...
         'order by a.%s, a.%s, a.%s'],...
@@ -154,7 +154,7 @@
 %         'pos2orf_name Table Name',1,...
 %         {'expt_pos2orf_name'}));
     
-    tablename_p2o       = '4C3_pos2orf_name1';
+    tablename_p2o       = '4C3_96R_pos2orf_name';
     
 %     prompt={'Enter the number of replicates in this study:'};
 %     replicate = str2num(cell2mat(inputdlg(prompt,...
@@ -194,10 +194,10 @@
     
 %   Fetch Protogenes
 
-    proto = fetch(conn, ['select orf_name from PROTOGENES ',...
-        'where longer + selected + translated < 3']);
-    
-    close(conn);
+%     proto = fetch(conn, ['select orf_name from PROTOGENES ',...
+%         'where longer + selected + translated < 3']);
+%     
+%     close(conn);
     
 %%  ANALYZE DATA
     
@@ -388,7 +388,6 @@
                     sprintf('%d,%d,%d,%d,%d,%d,%d,%d',contpos(ii,:))));
                 
                 if nansum(temp.fitness) > 0
-%                             contfit = [contfit, nanmean(temp.fitness)];
                     outlier = isoutlier(temp.fitness);
                     temp.fitness(outlier) = NaN;
                     contfit = [contfit, nanmean(temp.fitness)];
@@ -432,7 +431,42 @@
             sqlwrite(conn,tablename_pval,struct2table(pdata{iii}));
         end
         
+%%  SAVING DATA
+
+%         rep = 8;
+%         
+%         for i = 1:length(hours)
+%             cont_hrs = hours(i);
+%             
+%             temp_stat_p = fetch(conn, sprintf(['select a.*, b.p ',...
+%                 'from %s a, %s b ',...
+%                 'where a.orf_name = b.orf_name ',...
+%                 'and a.orf_name != ''BFC100'' ',...
+%                 'and a.hours = b.hours ',...
+%                 'and a.hours = %d ',...
+%                 'order by a.hours, a.orf_name'], tablename_fits, tablename_pval, cont_hrs));
+%             writetable(temp_stat_p,...
+%                 sprintf('%s_%d_%d_STATS_P.csv',expt_name,rep,...
+%                 cont_hrs),...
+%                 'Delimiter',',',...
+%                 'QuoteStrings',true)
+% 
+%             temp_fitness = fetch(conn, sprintf(['select a.hours, a.pos, b.6144plate, b.6144col, b.6144row, ',...
+%                 'a.orf_name, a.bg, a.average, a.fitness ',...
+%                 'from %s a, %s b ',...
+%                 'where a.pos = b.pos and a.hours = %d ',...
+%                 'order by a.hours, b.%s, b.%s, b.%s'],...
+%                 tablename_fit,p2c_info(1,:),...
+%                             cont_hrs,...
+%                             p2c_info(2,:),...
+%                             p2c_info(3,:),...
+%                             p2c_info(4,:)));        
+%              writetable(temp_fitness,...
+%                 sprintf('%s_%d_%d_FITNESS.csv',expt_name,rep,...
+%                 cont_hrs),...
+%                 'Delimiter',',',...
+%                 'QuoteStrings',true)
+%         end
+        
     end
-    
-    
     
