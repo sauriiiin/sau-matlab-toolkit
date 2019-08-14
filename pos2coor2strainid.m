@@ -14,12 +14,14 @@
     setdbprefs({'NullStringRead';'NullStringWrite';'NullNumberRead';'NullNumberWrite'},...
                   {'null';'null';'NaN';'NaN'})
     connectSQL;
-    
-    prompt={'Enter a name for your experiment:'};
-    name='expt_name';
-    numlines=1;
-    defaultanswer={'test'};
-    expt_name = char(inputdlg(prompt,name,numlines,defaultanswer));
+%     
+%     prompt={'Enter a name for your experiment:'};
+%     name='expt_name';
+%     numlines=1;
+%     defaultanswer={'test'};
+%     expt_name = char(inputdlg(prompt,name,numlines,defaultanswer));
+
+    expt_name = '4C3_GA3';
     
     tablename_p2id      = sprintf('%s_pos2strainid',expt_name);
     colnames_p2id       = {'pos','strain_id'};

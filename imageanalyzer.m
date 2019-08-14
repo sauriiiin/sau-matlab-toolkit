@@ -3,38 +3,23 @@
 %%  imageanalyzer.m
 
 %   Author: Saurin Parikh, April 2018
+%   Updated: August, 2019
+%       - Upload CS Data to SQL once Images are Analyzed
 %   dr.saurin.parikh@gmail.com
 
 %%  Load Paths to Files and Data
-
-    col_analyzer_path = '/Users/saur1n/Documents/GitHub/Matlab-Colony-Analyzer-Toolkit';
-    bean_toolkit_path = '/Users/saur1n/Documents/GitHub/bean-matlab-toolkit';
-    sau_toolkit_path = '/Users/saur1n/Documents/GitHub/sau-matlab-toolkit';
-    addpath(genpath(col_analyzer_path));
-    addpath(genpath(bean_toolkit_path));
-    addpath(genpath(sau_toolkit_path));
-%     javaaddpath(uigetfile());
-
-%%  Add MCA toolkit to Path
-    add_mca_toolkit_to_path
+    load_toolkit;
 
 %%  Initialization
-    
-%     hours = []; 
+
     files = {};
     filedir = dir(uigetdir());
     dirFlags = [filedir.isdir] & ~strcmp({filedir.name},'.') & ~strcmp({filedir.name},'..');
     subFolders = filedir(dirFlags);
     for k = 1 : length(subFolders)
         tmpdir = strcat(subFolders(k).folder, '/',  subFolders(k).name);
-        files = [files; dirfiles(tmpdir, '*.JPG')];  
-%         hrs = strfind(tmpdir, '/'); hrs = tmpdir(hrs(end)+1:end);
-%         hours = [hours, str2num(hrs(1:end-1))];
+        files = [files; dirfiles(tmpdir, '*.JPG')]; 
     end
-    
-%     if isempty(hours)
-%         hours = -1;
-%     end
     
     switch questdlg('Is density 384 or higher?',...
         'Density Options',...
@@ -78,18 +63,8 @@
                 all(ii) = exist(strcat(files{ii}, '.binary'));
             end
             pos = find(all==0);
-            
-        %%  Fix files that failed
-        
-%             for ii = 1 : length(pos)
-%                 tic;
-%                 analyze_image(files{pos(ii)}, params{:});
-%                 toc;
-%             end
-            
-%             analyze_directory_of_images(files(pos), params{:} );
 
-        %%  Manually fix images #1
+%%  Manually fix images #1
 
             for ii = 1 : length(pos)
                 tic;
@@ -98,33 +73,26 @@
                 toc;
             end
 
-        %%  Find Low Correlation Images
+%%  Find Low Correlation Images
 
             tmp = strfind(files, '/');
             threshold = 0.99;
-            %prob_img = [];
             pos = [];
 
             for ii = 1:3:length(files)
                 if nancorrcoef(load_colony_sizes(files{ii}),...
                         load_colony_sizes(files{ii+1})) < threshold
-                    %prob_img = vertcat(prob_img, files{ii}(tmp{ii}(end):end),...
-                    %   files{ii+1}(tmp{ii+1}(end):end));
                     pos = [pos, ii];
                 elseif nancorrcoef(load_colony_sizes(files{ii+1}),...
                         load_colony_sizes(files{ii+2})) < threshold
-                    %prob_img = vertcat(prob_img, files{ii+1}(tmp{ii+1}(end):end),...
-                    %    files{ii+2}(tmp{ii+2}(end):end));
                     pos = [pos, ii];
                 elseif nancorrcoef(load_colony_sizes(files{ii+2}),...
                         load_colony_sizes(files{ii})) < threshold
-                    %prob_img = vertcat(prob_img, files{ii+2}(tmp{ii+2}(end):end),...
-                    %    files{ii}(tmp{ii}(end):end));
                     pos = [pos, ii];
                 end
             end
 
-        %%  Manually fix images #2
+%%  Manually fix images #2
 
             for ii = 1 : size(pos,2)
                 analyze_image(files{pos(ii)}, params{:}, ...
@@ -141,18 +109,87 @@
             end
             
             
-        %%  VIEW ANALYZED IMAGES
+%%  View Analyzed Images
         
-            pos = [];
-            for ii = 1:length(files)
-                view_plate_image(files{ii},'applyThreshold', true)
-                switch questdlg('Was the Binary Image look fine?',...
-                    'Binary Image',...
-                    'Yes','No','Yes')
-                    case 'No'
-                        pos = [pos, ii];
-                end
-            end
+%             pos = [];
+%             for ii = 1:length(files)
+%                 view_plate_image(files{ii},'applyThreshold', true)
+%                 switch questdlg('Was the Binary Image look fine?',...
+%                     'Binary Image',...
+%                     'Yes','No','Yes')
+%                     case 'No'
+%                         pos = [pos, ii];
+%                 end
+%             end
             
     end
     
+%%  Load Colony Size Data
+
+    cs = load_colony_sizes(files);
+    size(cs)    % should be = (number of plates x 3 x number of time points) x density
+
+%%  Mean Colony Size For Each Plate
+
+    cs_mean = [];
+    tmp = cs';
+
+    for ii = 1:3:length(files)
+        cs_mean = [cs_mean, mean(tmp(:,ii:ii+2),2)];
+    end
+%     for ii = 1:length(files) %single picture/time point
+%         cs_mean = [cs_mean, tmp(:,ii)];
+%     end
+    cs_mean = cs_mean';
+
+%%  Putting Colony Size (pixels) And Averages Together
+
+    master = [];
+    tmp = [];
+    i = 1;
+    
+    for ii = 1:3:size(cs,1)
+        tmp = [cs(ii,:); cs(ii+1,:); cs(ii+2,:);...
+            cs_mean(i,:)];
+        master = [master, tmp];
+        i = i + 1;
+    end
+%     for ii = 1:size(cs,1) %single picture/time point
+%         tmp = [cs(ii,:); cs(ii,:); cs(ii,:);...
+%             cs_mean(ii,:)];
+%         master = [master, tmp];
+%     end
+    master = master';
+
+%%  Upload Colony Size Data to SQL
+
+    prompt={'Username:',...
+        'Password:',...
+        'Database:'};
+    name='SQL Database';
+    sql_info = char(inputdlg(prompt,...
+        name,1,...
+        {'usr','pwd','db'}));
+
+    conn = connSQL;
+
+    exec(conn, sprintf('drop table %s',tablename_jpeg));  
+    exec(conn, sprintf(['create table %s (pos int not null, hours int not null,'...
+        'replicate1 int default null, replicate2 int default null, ',...
+        'replicate3 int default null, average double default null)'], tablename_jpeg));
+
+    colnames_jpeg = {'pos','hours'...
+        'replicate1','replicate2','replicate3',...
+        'average'};
+
+    tmpdata = [];
+    for ii=1:length(hours)
+        tmpdata = [tmpdata; [p2c.pos, ones(length(p2c.pos),1)*hours(ii)]];
+    end
+
+    data = [tmpdata,master];
+    tic
+    datainsert(conn,tablename_jpeg,colnames_jpeg,data);
+    toc
+
+%%  END

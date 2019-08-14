@@ -11,23 +11,15 @@
 %   based Control Normalization.
 %   Inputs Required:
 %       sql info (username, password, database name), experiment name,
-%       pos2coor tablename, pos2orf_name tablename, control name
+%       pos2coor tablename, pos2orf_name tablename, control name,
+%       borderpos, smudgebox
 % 
 %   Recursive parent directory search to search all subdirectories
 %   containing images.
 
 %%  Load Paths to Files and Data
-
-    cd /home/sbp29/MATLAB
-
-    addpath(genpath('/home/sbp29/MATLAB/Matlab-Colony-Analyzer-Toolkit'))
-    addpath(genpath('/home/sbp29/MATLAB/bean-matlab-toolkit'))
-    addpath(genpath('/home/sbp29/MATLAB/sau-matlab-toolkit'))
-    addpath(genpath('/home/sbp29/MATLAB/sau-matlab-toolkit/grid-manipulation'))
-    addpath(genpath('/home/sbp29/MATLAB/paris'))
-    addpath(genpath('/home/sbp29/MATLAB/development'))
-
-    javaaddpath('/home/sbp29/MATLAB/mysql-connector-java-8.0.16.jar');
+    
+    load_toolkit;
 
 %%  Initialization
 
@@ -56,7 +48,7 @@
 %     numlines=1;
 %     defaultanswer={'test'};
 %     expt_name = char(inputdlg(prompt,name,numlines,defaultanswer));
-    expt_name = '4C3_96R';
+    expt_name = '4C3_GA3_CC2';
   
 %   Set Precision
 %     digits(6);
@@ -131,10 +123,10 @@
 %     p2c_info = char(inputdlg(prompt,...
 %         name,1,defaultanswers));
     
-    p2c_info(1,:) = '4C3_96R_pos2coor6144';
-    p2c_info(2,:) = '6144plate           ';
-    p2c_info(3,:) = '6144col             ';
-    p2c_info(4,:) = '6144row             ';
+    p2c_info(1,:) = '4C3_pos2coor6144';
+    p2c_info(2,:) = '6144plate       ';
+    p2c_info(3,:) = '6144col         ';
+    p2c_info(4,:) = '6144row         ';
 
     p2c = fetch(conn, sprintf(['select * from %s a ',...
         'order by a.%s, a.%s, a.%s'],...
@@ -154,7 +146,7 @@
 %         'pos2orf_name Table Name',1,...
 %         {'expt_pos2orf_name'}));
     
-    tablename_p2o       = '4C3_96R_pos2orf_name';
+    tablename_p2o       = '4C3_pos2orf_name3';
     
 %     prompt={'Enter the number of replicates in this study:'};
 %     replicate = str2num(cell2mat(inputdlg(prompt,...
