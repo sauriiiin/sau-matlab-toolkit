@@ -48,7 +48,7 @@
 %     numlines=1;
 %     defaultanswer={'test'};
 %     expt_name = char(inputdlg(prompt,name,numlines,defaultanswer));
-    expt_name = '4C3_GA3_CC2';
+    expt_name = '4C3_GA2';
   
 %   Set Precision
 %     digits(6);
