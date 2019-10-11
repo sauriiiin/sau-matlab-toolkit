@@ -48,7 +48,7 @@
 %     numlines=1;
 %     defaultanswer={'test'};
 %     expt_name = char(inputdlg(prompt,name,numlines,defaultanswer));
-    expt_name = '4C3_GA2';
+    expt_name = '4C3_GA3_CC2_TRBLBR';
   
 %   Set Precision
 %     digits(6);
@@ -146,7 +146,7 @@
 %         'pos2orf_name Table Name',1,...
 %         {'expt_pos2orf_name'}));
     
-    tablename_p2o       = '4C3_pos2orf_name3';
+    tablename_p2o       = '4C3_TRBLBR_pos2orf_name3';
     
 %     prompt={'Enter the number of replicates in this study:'};
 %     replicate = str2num(cell2mat(inputdlg(prompt,...

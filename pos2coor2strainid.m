@@ -21,7 +21,7 @@
 %     defaultanswer={'test'};
 %     expt_name = char(inputdlg(prompt,name,numlines,defaultanswer));
 
-    expt_name = '4C3_GA3';
+    expt_name = '4C3';
     
     tablename_p2id      = sprintf('%s_pos2strainid',expt_name);
     colnames_p2id       = {'pos','strain_id'};
