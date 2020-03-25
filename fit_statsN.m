@@ -21,7 +21,7 @@
             clear fit_dat;
             fit_dat = fetch(conn, sprintf(['select a.orf_name, a.hours, a.fitness ',...
                 'from %s a ',...
-                'where a.hours = %d ',...
+                'where a.hours = %0.2f ',...
                 'and a.orf_name != ''null'' and a.orf_name is not NULL ',...
                 'order by a.orf_name asc'],table,hrs.hours(iii)));
 
@@ -35,10 +35,12 @@
                         data.orf_name{inc.tt, 1} = fit_dat.orf_name{ii, 1};
                         data.hours(inc.tt, 1) = fit_dat.hours(ii, 1);
                         data.N(inc.tt, 1) = length(c);
-                        temp = temp(c);
-                        data.cs_mean(inc.tt, 1) = nanmean(temp);
-                        data.cs_median(inc.tt, 1) = nanmedian(temp);
-                        data.cs_std(inc.tt, 1) = nanstd(temp);
+                        if length(temp) >= length(c)
+                            temp = temp(c);
+                        end
+                        data.cs_mean(inc.tt, 1) = nanmean(temp(~isoutlier(temp)));
+                        data.cs_median(inc.tt, 1) = nanmedian(temp(~isoutlier(temp)));
+                        data.cs_std(inc.tt, 1) = nanstd(temp(~isoutlier(temp)));
                         inc.tt=inc.tt+1;
                     end
                 else
@@ -46,10 +48,12 @@
                     data.orf_name{inc.tt, 1} = fit_dat.orf_name{ii, 1};
                     data.hours(inc.tt, 1) = fit_dat.hours(ii, 1);
                     data.N(inc.tt, 1) = length(c);
-                    temp = temp(c);
-                    data.cs_mean(inc.tt, 1) = nanmean(temp);
-                    data.cs_median(inc.tt, 1) = nanmedian(temp);
-                    data.cs_std(inc.tt, 1) = nanstd(temp);
+                    if length(temp) >= length(c)
+                            temp = temp(c);
+                    end
+                    data.cs_mean(inc.tt, 1) = nanmean(temp(~isoutlier(temp)));
+                    data.cs_median(inc.tt, 1) = nanmedian(temp(~isoutlier(temp)));
+                    data.cs_std(inc.tt, 1) = nanstd(temp(~isoutlier(temp)));
                     clear temp;
                     inc.t=1;
                     inc.tt=inc.tt+1;
