@@ -48,7 +48,7 @@
 %     numlines=1;
 %     defaultanswer={'test'};
 %     expt_name = char(inputdlg(prompt,name,numlines,defaultanswer));
-    expt_name = '4C4_TR_CC';
+    expt_name = '4C4_TR_RND';
   
 %   Set Precision
 %     digits(6);

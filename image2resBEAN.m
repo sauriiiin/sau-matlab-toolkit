@@ -47,7 +47,7 @@
 %     numlines=1;
 %     defaultanswer={'test'};
 %     expt_name = char(inputdlg(prompt,name,numlines,defaultanswer));
-    expt_name = '4C4_FS_BEAN';
+    expt_name = '4C4_FS_RND2_BEAN';
   
 %   Set Precision
 %     digits(6);
