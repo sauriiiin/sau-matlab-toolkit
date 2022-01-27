@@ -47,7 +47,7 @@
 %     numlines=1;
 %     defaultanswer={'test'};
 %     expt_name = char(inputdlg(prompt,name,numlines,defaultanswer));
-    expt_name = '4C4_FS_RND2_BEAN';
+    expt_name = 'F28FUR_FS_BEAN';
   
 %   Set Precision
 %     digits(6);
@@ -122,10 +122,10 @@
 %     p2c_info = char(inputdlg(prompt,...
 %         name,1,defaultanswers));
     
-    p2c_info(1,:) = '4C4_pos2coor';
-    p2c_info(2,:) = 'plate       ';
-    p2c_info(3,:) = 'col         ';
-    p2c_info(4,:) = 'row         ';
+    p2c_info(1,:) = 'F28FUR_pos2coor';
+    p2c_info(2,:) = 'plate          ';
+    p2c_info(3,:) = 'col            ';
+    p2c_info(4,:) = 'row            ';
 
     p2c = fetch(conn, sprintf(['select * from %s a ',...
         'order by a.%s, a.%s, a.%s'],...
@@ -145,7 +145,7 @@
 %         'pos2orf_name Table Name',1,...
 %         {'expt_pos2orf_name'}));
     
-    tablename_p2o       = '4C4_pos2orf_name';
+    tablename_p2o       = 'F28FUR_pos2orf_name';
     
 %     prompt={'Enter the number of replicates in this study:'};
 %     replicate = str2num(cell2mat(inputdlg(prompt,...
@@ -174,14 +174,14 @@
 %         'Border Positions',1,...
 %         {'expt_borderpos'}));
 
-    tablename_bpos = '4C4_borderpos';
+    tablename_bpos = 'F28FUR_borderpos';
     
 %     prompt={'Enter the Smudge Box Table Name:'};
 %     tablename_sbox = char(inputdlg(prompt,...
 %         'Smudge Box',1,...
 %         {'expt_smudgebox'}));
 
-    tablename_sbox = '4C4_smudgebox';
+    tablename_sbox = 'F28FUR_smudgebox';
     
 %   Fetch Protogenes
 
@@ -199,16 +199,16 @@
         hours = hours(2:end);
         
 %         open beanNorm.m
-        data_fit = beanNorm(hours,density,n_plates,p2c_info,tablename_jpeg);
+        data_fit = beanNorm(hours,density,n_plates,p2c_info,tablename_jpeg,[]);
 
         exec(conn, sprintf('drop table %s',tablename_norm));
         exec(conn, sprintf(['create table %s ( ',...
-                    'pos int(11) not NULL, ',...
+                    'pos bigint not NULL, ',...
                     'hours double not NULL, ',...
                     'bg double default NULL, ',...
                     'average double default NULL, ',...
-                    'fitness double default NULL ',...
-                    ')'],tablename_norm));
+                    'fitness double default NULL, ',...
+                    'primary key (hours, pos))'],tablename_norm));
         for i=1:length(hours)
             datainsert(conn, tablename_norm,...
                 {'pos','hours','bg','average','fitness'},data_fit{i});
